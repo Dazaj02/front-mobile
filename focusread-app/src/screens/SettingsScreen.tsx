@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppSettings, VoiceSpeakerId, UserProfile } from '../types';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService, SystemVoiceInfo } from '../services/audioService';
 
 interface SettingsScreenProps {
@@ -31,7 +32,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onUpdateSettings,
   onLogout,
 }) => {
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [apiKeyInput, setApiKeyInput] = useState(settings.deepSeekApiKey || '');
   const [showApiKey, setShowApiKey] = useState(false);
   const [systemVoices, setSystemVoices] = useState<SystemVoiceInfo[]>([]);

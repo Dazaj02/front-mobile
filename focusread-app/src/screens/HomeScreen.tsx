@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Article, UserStats } from '../types';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 
 interface HomeScreenProps {
@@ -33,7 +34,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigateToTab,
   onToggleBookmark,
 }) => {
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('Todos');
 

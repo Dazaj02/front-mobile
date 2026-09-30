@@ -14,7 +14,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 import { UserProfile } from '../types';
 import { DEFAULT_USER_PROFILE, StorageService } from '../storage/storageService';
@@ -30,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLoginSuccess,
   onContinueAsGuest,
 }) => {
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('alex.rivera@focusread.ai');

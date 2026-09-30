@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { UserStats } from '../types';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 
 interface ProgressScreenProps {
@@ -17,7 +18,7 @@ interface ProgressScreenProps {
 }
 
 export const ProgressScreen: React.FC<ProgressScreenProps> = ({ stats, themeMode }) => {
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [reminderActivated, setReminderActivated] = useState(false);
 
   const daysLabels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];

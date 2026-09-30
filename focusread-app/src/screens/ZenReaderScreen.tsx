@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Article, MicroDose } from '../types';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 
 interface ZenReaderScreenProps {
@@ -42,7 +43,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
   onCompleteDose,
 }) => {
   const { width: windowWidth } = useWindowDimensions();
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [activeDoseIdx, setActiveDoseIdx] = useState(currentDoseIndex);
   const [fontSize, setFontSize] = useState<number>(18);
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);

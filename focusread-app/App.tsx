@@ -26,7 +26,13 @@ import { StorageService } from './src/storage/storageService';
 import { DeepSeekService } from './src/services/deepSeekService';
 import { AudioService } from './src/services/audioService';
 import { Article, UserStats, AppSettings, UserProfile } from './src/types';
-import { ThemeMode, themes } from './src/theme/tokens';
+import { useFonts } from 'expo-font';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Newsreader_400Regular, Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
+import { ThemeProvider } from './src/design-system/theme/ThemeProvider';
+import { semanticTokens } from './src/design-system/tokens';
+import { useLegacyColors } from './src/legacy/useLegacyColors';
+import { useSettingsStore } from './src/state/settingsStore';
 import { DEFAULT_APP_SETTINGS } from './src/data/mockArticles';
 
 type ActiveTab = 'explorar' | 'mi_dosis' | 'progreso' | 'ajustes';
@@ -34,6 +40,37 @@ const TABS: ActiveTab[] = ['explorar', 'mi_dosis', 'progreso', 'ajustes'];
 
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Newsreader_400Regular,
+    Newsreader_600SemiBold,
+  });
+  const hydrated = useSettingsStore((s) => s.hydrated);
+  const hydrate = useSettingsStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  if (!fontsLoaded || !hydrated) {
+    const boot = semanticTokens.paper;
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: boot.bg.base }]}>
+        <ActivityIndicator size="large" color={boot.accent.default} />
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <LegacyApp />
+    </ThemeProvider>
+  );
+}
+
+function LegacyApp() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -44,7 +81,8 @@ export default function App() {
     completedDosesCount: 14,
   });
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('paper');
+  const themeMode = useSettingsStore((s) => s.theme);
+  const setThemeMode = useSettingsStore((s) => s.setTheme);
 
   // Navegación
   const [activeTab, setActiveTab] = useState<ActiveTab>('explorar');
@@ -206,7 +244,7 @@ export default function App() {
     }
   };
 
-  const colors = themes[themeMode];
+  const colors = useLegacyColors();
 
   if (loading) {
     return (

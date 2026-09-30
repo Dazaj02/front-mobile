@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Article } from '../types';
-import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
+import type { ThemeMode } from '../design-system/tokens';
+import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 
 interface MyDosesScreenProps {
@@ -28,7 +29,7 @@ export const MyDosesScreen: React.FC<MyDosesScreenProps> = ({
   onOpenImportModal,
   onToggleBookmark,
 }) => {
-  const colors: ThemeColors = themes[themeMode];
+  const colors: ThemeColors = useLegacyColors();
   const [activeTab, setActiveTab] = useState<'in-progress' | 'saved' | 'completed' | 'audio'>('in-progress');
 
   const heroArticle = articles[0] || null;

@@ -4,10 +4,10 @@ const expo = require('eslint-config-expo/flat');
 // Reglas de dependencia atómica (PLAN_FRONTEND §5.2). En "warn" hasta F3.
 const DEP_LEVEL = 'warn';
 
-const forbid = (...groups) => ({
+const forbid = (...globs) => ({
   'no-restricted-imports': [
     DEP_LEVEL,
-    { patterns: groups.map((g) => ({ group: g, message: 'Viola la regla de dependencia atómica (§5.2)' })) },
+    { patterns: [{ group: globs, message: 'Viola la regla de dependencia atómica (§5.2)' }] },
   ],
 });
 
