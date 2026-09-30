@@ -2,8 +2,8 @@ const { defineConfig } = require('eslint/config');
 const expo = require('eslint-config-expo/flat');
 
 // Reglas de dependencia atómica (PLAN_FRONTEND §5.2).
-// atoms y molecules ya son "error" (F2); el resto pasa a "error" en F3.
-const DEP_LEVEL = 'warn';
+// Todas las capas en "error" desde F3.
+const DEP_LEVEL = 'error';
 
 const forbid = (level, ...globs) => ({
   'no-restricted-imports': [

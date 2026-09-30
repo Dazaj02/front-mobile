@@ -9,11 +9,12 @@ export interface TextInputBaseProps extends Omit<TextInputProps, 'style'> {
   disabled?: boolean;
   insetLeft?: number; // espacio reservado para iconos superpuestos
   insetRight?: number;
+  minLines?: number; // altura mínima para campos multilínea
 }
 
 // Sin label: lo agrega FormField. Quien lo use suelto debe pasar accessibilityLabel.
 export const TextInputBase = forwardRef<TextInput, TextInputBaseProps>(function TextInputBase(
-  { error = false, disabled = false, insetLeft, insetRight, onFocus, onBlur, ...rest },
+  { error = false, disabled = false, insetLeft, insetRight, minLines, onFocus, onBlur, ...rest },
   ref,
 ) {
   const { components: c, typography, spacing, opacity } = useTheme();
@@ -37,7 +38,7 @@ export const TextInputBase = forwardRef<TextInput, TextInputBaseProps>(function 
       style={[
         typography.body,
         {
-          minHeight: input.height,
+          minHeight: minLines ? Math.max(input.height, typography.body.lineHeight * minLines + spacing.lg) : input.height,
           borderRadius: input.radius,
           paddingLeft: insetLeft ?? spacing.lg,
           paddingRight: insetRight ?? spacing.lg,

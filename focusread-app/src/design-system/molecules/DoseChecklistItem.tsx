@@ -29,7 +29,7 @@ export function DoseChecklistItem({ index, title, minutes, done, current = false
         gap: spacing.md,
         minHeight: sizes.touchMin,
         paddingVertical: spacing.sm,
-        backgroundColor: pressed ? colors.accent.subtle : 'transparent',
+        backgroundColor: pressed ? colors.bg.sunken : 'transparent',
       })}
     >
       <Icon

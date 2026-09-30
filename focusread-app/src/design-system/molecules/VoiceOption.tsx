@@ -30,7 +30,7 @@ export function VoiceOption({ name, language, selected, onSelect, onPreview }: V
           gap: spacing.md,
           minHeight: sizes.touchMin,
           paddingVertical: spacing.sm,
-          backgroundColor: pressed ? colors.accent.subtle : 'transparent',
+          backgroundColor: pressed ? colors.bg.sunken : 'transparent',
         })}
       >
         <Icon name={selected ? 'radio-button-on' : 'radio-button-off'} color={selected ? 'accent' : 'muted'} />

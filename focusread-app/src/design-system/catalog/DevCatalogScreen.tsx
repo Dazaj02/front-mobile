@@ -27,12 +27,38 @@ import {
   ThemeSwatch,
   VoiceOption,
 } from '../molecules';
+import { useWindowClass } from '../layout/useWindowClass';
+import {
+  ArticleCard,
+  AudioMiniDock,
+  AuthForm,
+  BottomTabBar,
+  ContinueReadingCard,
+  DailyProgressCard,
+  DoseReader,
+  EmptyState,
+  ErrorState,
+  ImportSheet,
+  ProviderKeyForm,
+  QuizSheet,
+  WeeklyChart,
+  type ImportDuration,
+  type ImportMode,
+  type TabItem,
+} from '../organisms';
+import { SheetTemplate } from '../templates';
 import { useSettingsStore } from '../../state/settingsStore';
 import { useTheme } from '../theme/useTheme';
 import { THEME_MODES, type ThemeMode } from '../tokens';
 
 const THEME_LABELS: Record<ThemeMode, string> = { paper: 'Papel', sepia: 'Sepia', dark: 'Oscuro' };
 const noop = () => {};
+
+const TABS: readonly TabItem[] = [
+  { key: 'library', label: 'Biblioteca', icon: 'library-outline', iconActive: 'library' },
+  { key: 'progress', label: 'Progreso', icon: 'stats-chart-outline', iconActive: 'stats-chart' },
+  { key: 'settings', label: 'Ajustes', icon: 'settings-outline', iconActive: 'settings' },
+];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const { spacing } = useTheme();
@@ -73,6 +99,16 @@ export function DevCatalogScreen({ onClose }: { onClose: () => void }) {
   const [voice, setVoice] = useState('a');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
+  const win = useWindowClass();
+  const [sheet, setSheet] = useState<'import' | 'quiz' | 'provider' | null>(null);
+  const [tab, setTab] = useState('library');
+  const [importMode, setImportMode] = useState<ImportMode>('text');
+  const [importText, setImportText] = useState('');
+  const [importUrl, setImportUrl] = useState('');
+  const [duration, setDuration] = useState<ImportDuration>(2.5);
+  const [provider, setProvider] = useState('deepseek');
+  const [model, setModel] = useState<string | null>('chat');
+  const [apiKey, setApiKey] = useState('');
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.base }}>
@@ -211,7 +247,140 @@ export function DevCatalogScreen({ onClose }: { onClose: () => void }) {
           <Banner tone="offline" message="Sin conexión" actionLabel="Reintentar" onAction={noop} />
           <Banner tone="error" message="No pudimos importar el texto" actionLabel="Reintentar" onAction={noop} />
         </Section>
+
+        <Section title="Ventana">
+          <AppText variant="body">
+            {win.windowClass} · {Math.round(win.width)}×{Math.round(win.height)} dp · {win.isLandscape ? 'horizontal' : 'vertical'} · gutter {win.gutter} · biblioteca {win.libraryColumns} col.
+          </AppText>
+        </Section>
+
+        <Section title="Biblioteca">
+          <ContinueReadingCard title="El futuro de la lectura en pantallas" doseLabel="Dosis 2 de 5" progress={0.4} onContinue={noop} />
+          <DailyProgressCard minutesToday={18} dosesToday={6} goalMinutes={30} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+            {[0, 1].map((i) => (
+              <View key={i} style={{ flexGrow: 1, flexBasis: layout.readerMaxWidth / 2.5, minWidth: 0 }}>
+                <ArticleCard
+                  title={i === 0 ? 'Cómo la atención selectiva moldea la memoria de largo plazo' : 'Breve'}
+                  category="Ciencia"
+                  totalMinutes={12.5}
+                  doseCount={5}
+                  progress={i === 0 ? 0.6 : 0}
+                  bookmarked={i === 0}
+                  onPress={noop}
+                  onToggleBookmark={noop}
+                  bookmarkDisabled={i === 1}
+                />
+              </View>
+            ))}
+          </View>
+        </Section>
+
+        <Section title="Progreso">
+          <WeeklyChart
+            data={[
+              { label: 'L', fullLabel: 'Lunes', minutes: 12 },
+              { label: 'M', fullLabel: 'Martes', minutes: 0 },
+              { label: 'X', fullLabel: 'Miércoles', minutes: 25 },
+              { label: 'J', fullLabel: 'Jueves', minutes: 7 },
+              { label: 'V', fullLabel: 'Viernes', minutes: 18 },
+              { label: 'S', fullLabel: 'Sábado', minutes: 0 },
+              { label: 'D', fullLabel: 'Domingo', minutes: 3 },
+            ]}
+          />
+        </Section>
+
+        <Section title="Lector">
+          <DoseReader
+            title="Introducción"
+            content={'La atención es un recurso limitado y valioso.\n\nLeer en dosis cortas ayuda a sostenerla sin fatiga.'}
+            position={1}
+            total={5}
+            progress={0.35}
+            onPrev={noop}
+            onNext={noop}
+          />
+        </Section>
+
+        <Section title="Formularios de organismo">
+          <AuthForm
+            variant="register"
+            title="Crea tu cuenta"
+            submitLabel="Registrarme"
+            values={{ email: 'a@b.co', password: '', confirm: '' }}
+            errors={{ password: 'Usa al menos 8 caracteres', form: 'No pudimos crear la cuenta' }}
+            onChange={noop}
+            onSubmit={noop}
+            links={[{ label: 'Ya tengo cuenta', onPress: noop }]}
+          />
+          <EmptyState title="Aún no tienes artículos" message="Importa un texto para empezar" actionLabel="Importar" onAction={noop} />
+          <ErrorState title="No pudimos cargar tu biblioteca" message="Revisa tu conexión" onRetry={noop} />
+        </Section>
+
+        <Section title="Hojas y dock">
+          <Row label="hojas (SheetTemplate)">
+            <Button variant="secondary" label="Importar" onPress={() => setSheet('import')} />
+            <Button variant="secondary" label="Quiz" onPress={() => setSheet('quiz')} />
+            <Button variant="secondary" label="Motor de IA" onPress={() => setSheet('provider')} />
+          </Row>
+          <View style={{ height: spacing.xxxl * 3 }}>
+            <AudioMiniDock title="El futuro de la lectura" playing onToggle={noop} onClose={noop} aboveTabBar={false} />
+          </View>
+          <BottomTabBar
+            tabs={TABS}
+            activeKey={tab}
+            onSelect={setTab}
+          />
+        </Section>
       </ScrollView>
+
+      <SheetTemplate visible={sheet === 'import'} title="Importar" onClose={() => setSheet(null)}>
+        <ImportSheet
+          mode={importMode}
+          onModeChange={setImportMode}
+          text={importText}
+          onTextChange={setImportText}
+          url={importUrl}
+          onUrlChange={setImportUrl}
+          duration={duration}
+          onDurationChange={setDuration}
+          providerLabel="FocusRead (incluido)"
+          status="idle"
+          onSubmit={noop}
+        />
+      </SheetTemplate>
+      <SheetTemplate visible={sheet === 'quiz'} title="Comprueba lo leído" onClose={() => setSheet(null)}>
+        <QuizSheet
+          quiz={{
+            question: '¿Qué ayuda a sostener la atención?',
+            options: ['Leer en dosis cortas', 'Leer sin pausas', 'Leer de noche'],
+            correctIndex: 0,
+            explanation: 'Las dosis cortas reducen la fatiga.',
+          }}
+          onDone={() => setSheet(null)}
+        />
+      </SheetTemplate>
+      <SheetTemplate visible={sheet === 'provider'} title="Motor de IA" onClose={() => setSheet(null)}>
+        <ProviderKeyForm
+          providers={[
+            { id: 'focusread', name: 'FocusRead' },
+            { id: 'deepseek', name: 'DeepSeek' },
+          ]}
+          provider={provider}
+          onProviderChange={setProvider}
+          models={[{ id: 'chat', label: 'deepseek-chat' }]}
+          model={model}
+          onModelChange={setModel}
+          requiresKey={provider !== 'focusread'}
+          apiKey={apiKey}
+          onApiKeyChange={setApiKey}
+          hasSavedKey={false}
+          onSaveKey={noop}
+          onDeleteKey={noop}
+          onTest={noop}
+          testDisabledReason="Disponible con el servidor"
+        />
+      </SheetTemplate>
     </SafeAreaView>
   );
 }

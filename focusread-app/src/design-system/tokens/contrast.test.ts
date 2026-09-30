@@ -40,6 +40,12 @@ for (const [sn, sg] of surfaces) {
   pairs.push([`text.secondary / ${sn}`, (t) => t.text.secondary, sg, 4.5]);
   pairs.push([`text.muted / ${sn}`, (t) => t.text.muted, sg, 4.5]);
 }
+// accent.subtle solo aloja texto primario/secundario (chip activo, tarjeta "continuar").
+// text.muted NO cumple sobre accent.subtle en paper/dark, por eso las filas presionadas usan bg.sunken.
+for (const k of ['primary', 'secondary'] as const) {
+  pairs.push([`text.${k} / accent.subtle`, (t) => t.text[k], (t) => t.accent.subtle, 4.5]);
+}
+pairs.push(['text.onAccent / accent.pressed', (t) => t.text.onAccent, (t) => t.accent.pressed, 4.5]);
 pairs.push(['text.onAccent / accent.default', (t) => t.text.onAccent, (t) => t.accent.default, 4.5]);
 for (const [sn, sg] of [...surfaces.slice(0, 2), ['accent.subtle', (t: SemanticTokens) => t.accent.subtle] as [string, (t: SemanticTokens) => string]]) {
   pairs.push([`accent.default / ${sn}`, (t) => t.accent.default, sg, 4.5]);

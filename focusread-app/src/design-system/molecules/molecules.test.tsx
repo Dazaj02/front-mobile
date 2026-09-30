@@ -1,8 +1,7 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import { ThemeProvider } from '../theme/ThemeProvider';
-import { renderWithTheme } from '../testUtils';
+import { renderWithTheme, TestProviders } from '../testUtils';
 import {
   Banner,
   DoseChecklistItem,
@@ -103,9 +102,9 @@ describe('moléculas: render y accesibilidad', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Aumentar tamaño de letra' }));
     expect(onChange).toHaveBeenCalledWith(1.1);
     await rerender(
-      <ThemeProvider>
+      <TestProviders>
         <FontSizeStepper value={1.6} onChange={onChange} />
-      </ThemeProvider>,
+      </TestProviders>,
     );
     expect(screen.getByRole('button', { name: 'Aumentar tamaño de letra' }).props.accessibilityState).toMatchObject({ disabled: true });
   });

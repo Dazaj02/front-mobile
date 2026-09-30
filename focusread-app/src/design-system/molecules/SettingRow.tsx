@@ -49,7 +49,7 @@ export function SettingRow({ title, description, control, onPress, accessibility
       accessibilityLabel={description ? `${title}. ${description}` : title}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
-      style={({ pressed }) => ({ backgroundColor: pressed ? colors.accent.subtle : 'transparent' })}
+      style={({ pressed }) => ({ backgroundColor: pressed ? colors.bg.sunken : 'transparent' })}
     >
       {content}
     </Pressable>

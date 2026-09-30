@@ -41,7 +41,7 @@ const TABS: ActiveTab[] = ['explorar', 'mi_dosis', 'progreso', 'ajustes'];
 
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -55,7 +55,8 @@ export default function App() {
     hydrate();
   }, [hydrate]);
 
-  if (!fontsLoaded || !hydrated) {
+  // Si las fuentes fallan se sigue con la fuente del sistema en vez de quedar en el spinner.
+  if ((!fontsLoaded && !fontError) || !hydrated) {
     const boot = semanticTokens.paper;
     return (
       <View style={[styles.loadingContainer, { backgroundColor: boot.bg.base }]}>

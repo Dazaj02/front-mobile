@@ -21,7 +21,6 @@ export function FilterChipGroup<T extends string>({ options, value, onChange }: 
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      accessibilityRole="radiogroup"
       contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.xs }}
     >
       {options.map((o) => (
