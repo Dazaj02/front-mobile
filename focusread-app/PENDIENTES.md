@@ -50,6 +50,17 @@
 | D39 | F5 | `jest.setup.js` ahora simula `BackHandler` (con `mockPressBack`), `expo-linking` y gesture-handler | Aceptada |
 | D40 | F5 | `DailyProgressCard`, `ArticleCard`, etc. aún no se usan en pantallas reales (F6) | Informativa |
 
+| D41 | F6 | **Se cierra D19 por defecto:** sin meta diaria (el contrato no la tiene). Progreso muestra lo leído hoy, sin barra de meta. Si David quiere una meta, hay que pedir un cambio de contrato (`UserSettings.dailyGoalMinutes`) | Resuelta por defecto (David puede vetar) |
+| D42 | F6 | En modo mock, la Biblioteca vacía ofrece "Cargar artículos de ejemplo" (3 textos originales con quiz). No está en el plan: sin ello no se puede probar el lector sin pegar 300+ caracteres. Los textos demo se ampliaron para que den ≥ 2 dosis a 2.5 min | Aceptada |
+| D43 | F6 | Teclado (P11): `KeyboardAvoidingView behavior="padding"` en Android + scroll al final al abrirse el teclado (`useScrollToEndOnKeyboard`). `ImportSheet` ya no tiene su propio KAV (lo tiene `SheetTemplate`; dos se sumaban) y `ProviderKeyForm` no anida un ScrollView | Resuelta (verificar en teléfono) |
+| D44 | F6 | Dependencia nueva `@react-native-community/slider` para los deslizadores de velocidad y tono | Aceptada |
+| D45 | F6 | El mock lista los 6 proveedores para poder probar la pantalla Motor de IA; los que requieren key fallan con `PROVIDER_UNAVAILABLE` al importar (solo funcionan con el servidor) | Aceptada |
+| D46 | F6 | Android no puede pausar el TTS a mitad: "pausar" detiene y "reanudar" lee la dosis desde el inicio. El minireproductor (`AudioMiniDock`) vive en `AppTabs` y la lectura continúa al salir del lector | Aceptada |
+| D47 | F6 | Decisiones de sesión de lectura no escritas en el plan: al salir de una dosis con ≥ 5 s activos se guarda una sesión parcial (`completed: false`); la barra de progreso de la dosis = tiempo activo / `estMinutes`; `includeQuiz` siempre `true` al importar (el ajuste de quiz solo decide si se muestra) | Aceptada |
+| D48 | F6 | `recordReadingSession` centraliza el guardado de sesiones para que F7 lo cambie a "outbox + flush" sin tocar pantallas | Pendiente F7 |
+| D49 | F6 | `clearUserData()` ya existe (SQLite + keys) y lo usa Eliminar cuenta. **Cerrar sesión NO lo usa:** en modo mock no hay servidor, así que borrar al cerrar sesión destruiría el progreso | **Decisión de David para F7** (ver P15) |
+| D50 | F6 | Existe `.env` en `focusread-app/` (creado por David, ignorado por git, `EXPO_PUBLIC_DATA_MODE=mock`, con URL y anon key de Supabase para F8). No se leyeron ni se usan sus valores aún | Informativa |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |
@@ -63,11 +74,13 @@
 | P7 | `predictiveBackGestureEnabled: false`: se deja en `false` (back clásico, probado con tests); reconsiderar solo si se quiere el gesto predictivo de Android 14+ | F9 | **David**: probar el botón atrás en el teléfono (sección 3) |
 | P8 | Ports restantes (Auth, Article, Progress, AIGateway, SecretStore) | ~~F4~~ Resuelto | — |
 | P12 | Confirmar con el agente backend los bordes del chunker (D29) y el mensaje/código de errores | Antes de H1 | **David**: pasar D29 al agente backend |
-| P13 | `DailyProgressCard` sin meta diaria (D19): definir en F6 | F6 | Decisión de David |
+| P13 | `DailyProgressCard` sin meta diaria (D19) | ~~F6~~ Resuelto por defecto (D41) | David puede vetar |
+| P15 | Cerrar sesión en modo mock: ¿conservar progreso y artículos (recomendado: sí, en mock no hay otra copia) o borrarlos? En live sí se limpia caché tras `flush` | F7 | **Decisión de David** |
+| P16 | Verificar en teléfono la pantalla Motor de IA con `usePreventScreenCapture` (Expo Go): debe impedir capturas | F6 (verificación) | **David** |
 | P14 | Verificar en Expo Go que la app arranca con SQLite (los ajustes ahora viven en `focusread.db`) | Ahora | **David** |
 | P9 | Reglas ESLint de dependencia atómica | ~~F3~~ Resuelto: todas en `error` | — |
 | P10 | `BottomTabBar` y `SheetTemplate`: comportamiento real con barra de gestos y teclado en Android edge-to-edge | F3 (verificación) / F5 | **David**: matriz responsive (sección 3) |
-| P11 | `KeyboardAvoidingView` usa `behavior="height"` en Android; ajustar si el teclado tapa campos | F5 (auth) | **David**: probar en dispositivo |
+| P11 | Teclado que tapaba el botón de Registro | ~~F5~~ Corregido (D43); confirmar en teléfono | **David** |
 
 ## 3. Verificaciones manuales que necesito de David (no puedo abrir emulador)
 

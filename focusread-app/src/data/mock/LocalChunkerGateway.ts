@@ -37,7 +37,16 @@ export class LocalChunkerGateway implements AIGateway {
     this.now = options.now ?? (() => new Date());
   }
 
+  // Lista fija para poder mostrar y probar la pantalla "Motor de IA" sin servidor.
+  // Los proveedores con key propia solo funcionan con el servidor (live).
   async listProviders(): Promise<ProviderInfo[]> {
+    const byok: [ProviderInfo['id'], string][] = [
+      ['deepseek', 'DeepSeek'],
+      ['openai', 'OpenAI'],
+      ['gemini', 'Google Gemini'],
+      ['openrouter', 'OpenRouter'],
+      ['groq', 'Groq'],
+    ];
     return [
       {
         id: 'focusread',
@@ -46,6 +55,13 @@ export class LocalChunkerGateway implements AIGateway {
         models: [{ id: 'local', label: 'Fragmentador local' }],
         defaultModel: 'local',
       },
+      ...byok.map(([id, name]) => ({
+        id,
+        name,
+        requiresUserKey: true,
+        models: [{ id: 'default', label: 'Modelo por defecto' }],
+        defaultModel: 'default',
+      })),
     ];
   }
 
@@ -58,6 +74,9 @@ export class LocalChunkerGateway implements AIGateway {
   }
 
   async process(req: ProcessArticleRequest): Promise<ProcessArticleResponse> {
+    if (req.provider && req.provider !== 'focusread') {
+      throw new AppError('PROVIDER_UNAVAILABLE', 'Los proveedores con key propia requieren el servidor');
+    }
     if (req.source.type === 'url') {
       throw new AppError('URL_FETCH_FAILED', URL_NEEDS_SERVER_MESSAGE);
     }

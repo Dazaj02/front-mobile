@@ -109,14 +109,19 @@ export function ProviderKeyForm(props: ProviderKeyFormProps) {
           </View>
         ) : null}
 
-        <Button
-          variant="secondary"
-          label="Probar conexión"
-          loading={testing}
-          disabled={Boolean(testDisabledReason) || (requiresKey && !hasSavedKey)}
-          onPress={onTest}
-        />
-        {testDisabledReason ? <Banner tone="info" message={testDisabledReason} /> : null}
+        {/* El proveedor incluido no tiene key propia que probar. */}
+        {requiresKey ? (
+          <>
+            <Button
+              variant="secondary"
+              label="Probar conexión"
+              loading={testing}
+              disabled={Boolean(testDisabledReason) || !hasSavedKey}
+              onPress={onTest}
+            />
+            {testDisabledReason ? <Banner tone="info" message={testDisabledReason} /> : null}
+          </>
+        ) : null}
         {testMessage ? <Banner tone={testMessage.ok ? 'info' : 'error'} message={testMessage.text} /> : null}
       </View>
     </KeyboardAvoidingView>

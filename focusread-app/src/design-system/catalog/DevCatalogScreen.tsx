@@ -23,6 +23,7 @@ import {
   SearchBar,
   SectionHeader,
   SettingRow,
+  SliderField,
   StatTile,
   ThemeSwatch,
   VoiceOption,
@@ -228,6 +229,7 @@ export function DevCatalogScreen({ onClose }: { onClose: () => void }) {
             onChange={setFilter}
           />
           <SettingRow title="Motor de IA" description="FocusRead (incluido)" onPress={noop} />
+          <SliderField label="Velocidad" value={1} min={0.5} max={2} step={0.1} onChange={noop} format={(v) => `${v.toFixed(1)}×`} />
           <VoiceOption name="Voz de sistema" language="es-MX" selected={voice === 'a'} onSelect={() => setVoice('a')} onPreview={noop} />
           <VoiceOption name="Otra voz" language="es-ES" selected={voice === 'b'} onSelect={() => setVoice('b')} onPreview={noop} />
         </Section>

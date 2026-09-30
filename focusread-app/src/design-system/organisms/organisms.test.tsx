@@ -204,9 +204,14 @@ describe('ProviderKeyForm', () => {
   });
 
   it('deshabilita "Probar conexión" con motivo', async () => {
-    await renderWithTheme(<ProviderKeyForm {...base} testDisabledReason="Disponible con el servidor" />);
+    await renderWithTheme(<ProviderKeyForm {...base} provider="openai" requiresKey hasSavedKey testDisabledReason="Disponible con el servidor" />);
     expect(screen.getByRole('button', { name: 'Probar conexión' }).props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByText('Disponible con el servidor')).toBeTruthy();
+  });
+
+  it('el proveedor incluido no muestra "Probar conexión"', async () => {
+    await renderWithTheme(<ProviderKeyForm {...base} />);
+    expect(screen.queryByRole('button', { name: 'Probar conexión' })).toBeNull();
   });
 });
 

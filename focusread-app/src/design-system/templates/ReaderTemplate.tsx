@@ -8,11 +8,12 @@ import { useTheme } from '../theme/useTheme';
 export interface ReaderTemplateProps {
   top: React.ReactNode; // controles superiores (volver, tema, tamaño)
   bottom?: React.ReactNode; // controles inferiores (audio)
+  scrollKey?: string | number; // al cambiar, el texto vuelve a mostrarse desde arriba (p. ej. otra dosis)
   children: React.ReactNode;
 }
 
 // Pantalla completa: columna de lectura centrada (≤ readerMaxWidth) con controles respetando insets.
-export function ReaderTemplate({ top, bottom, children }: ReaderTemplateProps) {
+export function ReaderTemplate({ top, bottom, scrollKey, children }: ReaderTemplateProps) {
   const { colors, layout, spacing } = useTheme();
   const { gutter } = useWindowClass();
   const column = {
@@ -24,7 +25,7 @@ export function ReaderTemplate({ top, bottom, children }: ReaderTemplateProps) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.base }}>
       <View style={[column, { paddingVertical: spacing.xs }]}>{top}</View>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingVertical: spacing.lg }}>
+      <ScrollView key={scrollKey} contentContainerStyle={{ flexGrow: 1, paddingVertical: spacing.lg }}>
         <View testID="reader-column" style={column}>
           {children}
         </View>

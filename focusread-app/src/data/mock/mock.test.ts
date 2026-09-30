@@ -61,9 +61,12 @@ describe('LocalChunkerGateway', () => {
     expect(titleFromText('hola mundo.')).toBe('Hola mundo');
   });
 
-  it('expone un solo proveedor y no permite probar keys sin servidor', async () => {
+  it('lista los proveedores (solo FocusRead sin key) y no permite probar keys ni usarlos sin servidor', async () => {
     const { gw } = gateway();
-    expect((await gw.listProviders()).map((p) => p.id)).toEqual(['focusread']);
+    const providers = await gw.listProviders();
+    expect(providers.map((p) => p.id)).toEqual(['focusread', 'deepseek', 'openai', 'gemini', 'openrouter', 'groq']);
+    expect(providers.filter((p) => !p.requiresUserKey).map((p) => p.id)).toEqual(['focusread']);
+    await expect(gw.process({ source: { type: 'text', text: TEXT }, targetDoseMinutes: 2.5, provider: 'openai' })).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' });
     await expect(gw.testProvider('openai', undefined, 'k')).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE', message: 'Disponible con el servidor' });
   });
 });
@@ -79,6 +82,10 @@ describe('demoArticles', () => {
       expect(a.doses.filter((d) => d.quiz).length).toBe(1);
       expect(a.doses[a.doses.length - 1].quiz).not.toBeNull();
     }
+  });
+
+  it('cada artículo tiene varias dosis con la duración por defecto (2.5 min)', () => {
+    for (const a of buildDemoArticles(2.5)) expect(a.doseCount).toBeGreaterThanOrEqual(2);
   });
 
   it('respeta la duración objetivo: dosis más cortas producen más dosis', () => {

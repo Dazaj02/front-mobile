@@ -41,6 +41,28 @@ jest.mock('expo-linking', () => ({
   openURL: jest.fn(() => Promise.resolve(true)),
 }));
 
+// Módulos nativos sin implementación en Node
+jest.mock('@react-native-community/slider', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const Slider = React.forwardRef((props, ref) => React.createElement(View, { ...props, ref, testID: props.testID || 'slider' }));
+  return { __esModule: true, default: Slider };
+});
+jest.mock('expo-screen-capture', () => ({ usePreventScreenCapture: jest.fn() }));
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn(async () => {}),
+  impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+}));
+jest.mock('expo-speech', () => ({
+  speak: jest.fn(),
+  stop: jest.fn(),
+  getAvailableVoicesAsync: jest.fn(async () => []),
+  maxSpeechInputLength: 4000,
+}));
+
 jest.mock('expo-crypto', () => ({
   randomUUID: () => require('crypto').randomUUID(),
 }));

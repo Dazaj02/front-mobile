@@ -29,6 +29,10 @@ export interface ImportSheetProps {
   disabledReason?: string; // p. ej. "Requiere conexión"
   minTextLength?: number;
   onSubmit: () => void;
+  completed?: boolean; // importación terminada con advertencia: se muestra el aviso y un botón para cerrar
+  completedMessage?: string;
+  doneLabel?: string;
+  onDone?: () => void;
 }
 
 const DURATIONS: readonly ImportDuration[] = [1.5, 2.5, 3.5];
@@ -49,12 +53,26 @@ export function ImportSheet({
   disabledReason,
   minTextLength = 300,
   onSubmit,
+  completed = false,
+  completedMessage,
+  doneLabel = 'Listo',
+  onDone,
 }: ImportSheetProps) {
   const { spacing } = useTheme();
   const processing = status === 'processing';
   const textTooShort = mode === 'text' && text.trim().length < minTextLength;
   const urlEmpty = mode === 'url' && url.trim().length === 0;
   const blocked = Boolean(disabledReason) || processing || textTooShort || urlEmpty;
+
+  if (completed) {
+    return (
+      <View style={{ gap: spacing.lg }}>
+        {completedMessage ? <Banner tone="info" message={completedMessage} /> : null}
+        {warningMessage ? <Banner tone="offline" message={warningMessage} /> : null}
+        <Button label={doneLabel} onPress={onDone ?? onSubmit} />
+      </View>
+    );
+  }
 
   return (
     // El teclado lo gestiona el SheetTemplate que contiene esta hoja (un solo KeyboardAvoidingView).

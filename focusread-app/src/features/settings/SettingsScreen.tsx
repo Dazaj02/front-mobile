@@ -5,33 +5,44 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { AppText } from '../../design-system/atoms/AppText';
 import { Button } from '../../design-system/atoms/Button';
+import { Chip } from '../../design-system/atoms/Chip';
 import { Divider } from '../../design-system/atoms/Divider';
+import { Spinner } from '../../design-system/atoms/Spinner';
+import { Switch } from '../../design-system/atoms/Switch';
 import { FontSizeStepper } from '../../design-system/molecules/FontSizeStepper';
 import { SectionHeader } from '../../design-system/molecules/SectionHeader';
 import { SettingRow } from '../../design-system/molecules/SettingRow';
+import { SliderField } from '../../design-system/molecules/SliderField';
 import { ThemeSwatch } from '../../design-system/molecules/ThemeSwatch';
+import { VoiceOption } from '../../design-system/molecules/VoiceOption';
 import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { THEME_MODES } from '../../design-system/tokens';
 import { es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
+import { haptic } from '../../services/haptics';
+import { speak } from '../../services/tts';
 import { useSessionStore } from '../../state/sessionStore';
 import { useSettingsStore } from '../../state/settingsStore';
+import { useSpanishVoices } from './useVoices';
 
-// Esqueleto de F5: Apariencia y Cuenta básica. El resto de secciones (lectura, voz, accesibilidad,
-// motor de IA, eliminar cuenta) llega en F6.
+const DOSE_OPTIONS = [1.5, 2.5, 3.5] as const;
+const formatFactor = (v: number) => `${v.toFixed(1)}×`;
+
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  const { spacing } = useTheme();
-  const theme = useSettingsStore((s) => s.theme);
-  const setTheme = useSettingsStore((s) => s.setTheme);
-  const scale = useSettingsStore((s) => s.readerFontScale);
-  const setScale = useSettingsStore((s) => s.setReaderFontScale);
-  const email = useSessionStore((s) => s.session?.email);
-  const signOut = useSessionStore((s) => s.signOut);
+  const { spacing, reduceMotion } = useTheme();
+  const s = useSettingsStore();
+  const email = useSessionStore((st) => st.session?.email);
+  const signOut = useSessionStore((st) => st.signOut);
+  const voices = useSpanishVoices();
+
+  const testVoice = (voiceId: string | null) =>
+    speak(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
 
   return (
     <ScreenTemplate header={{ title: es.settings.title }}>
+      {/* Apariencia */}
       <View style={{ gap: spacing.md }}>
         <SectionHeader title={es.settings.appearance} />
         <AppText variant="label" color="secondary">
@@ -39,22 +50,109 @@ export function SettingsScreen() {
         </AppText>
         <View style={{ flexDirection: 'row', gap: spacing.sm }} accessibilityRole="radiogroup">
           {THEME_MODES.map((m) => (
-            <ThemeSwatch key={m} mode={m} label={es.settings.themes[m]} selected={theme === m} onPress={() => setTheme(m)} />
+            <ThemeSwatch key={m} mode={m} label={es.settings.themes[m]} selected={s.theme === m} onPress={() => s.setTheme(m)} />
           ))}
         </View>
         <AppText variant="label" color="secondary">
           {es.settings.fontSize}
         </AppText>
-        <FontSizeStepper value={scale} onChange={setScale} />
+        <FontSizeStepper value={s.readerFontScale} onChange={s.setReaderFontScale} />
         <Divider />
       </View>
 
+      {/* Lectura */}
+      <View style={{ gap: spacing.sm }}>
+        <SectionHeader title={es.settings.reading} />
+        <AppText variant="label" color="secondary">
+          {es.settings.doseDuration}
+        </AppText>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {DOSE_OPTIONS.map((m) => (
+            <Chip key={m} label={es.settings.doseMinutes(m)} selected={s.targetDoseMinutes === m} onPress={() => s.update({ targetDoseMinutes: m })} />
+          ))}
+        </View>
+        <SettingRow
+          title={es.settings.quiz}
+          description={es.settings.quizHint}
+          control={<Switch value={s.quizEnabled} onValueChange={(v) => s.update({ quizEnabled: v })} accessibilityLabel={es.settings.quiz} />}
+        />
+        <Divider />
+      </View>
+
+      {/* Voz: solo voces reales del sistema en español */}
+      <View style={{ gap: spacing.sm }}>
+        <SectionHeader title={es.settings.voice} />
+        {voices.isLoading ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Spinner accessibilityLabel={es.settings.voicesLoading} />
+            <AppText variant="caption" color="secondary">
+              {es.settings.voicesLoading}
+            </AppText>
+          </View>
+        ) : voices.data && voices.data.length > 0 ? (
+          <View accessibilityRole="radiogroup">
+            <VoiceOption
+              name={es.settings.voiceSystemDefault}
+              language="es"
+              selected={s.voiceId === null}
+              onSelect={() => s.update({ voiceId: null })}
+              onPreview={() => testVoice(null)}
+            />
+            {voices.data.map((v) => (
+              <VoiceOption
+                key={v.id}
+                name={v.name}
+                language={v.language}
+                selected={s.voiceId === v.id}
+                onSelect={() => s.update({ voiceId: v.id })}
+                onPreview={() => testVoice(v.id)}
+              />
+            ))}
+          </View>
+        ) : (
+          <AppText variant="caption" color="secondary">
+            {es.settings.voicesEmpty}
+          </AppText>
+        )}
+        <SliderField label={es.settings.voiceRate} value={s.speechRate} min={0.5} max={2} step={0.1} format={formatFactor} onChange={(v) => s.update({ speechRate: v })} />
+        <SliderField label={es.settings.voicePitch} value={s.speechPitch} min={0.5} max={2} step={0.1} format={formatFactor} onChange={(v) => s.update({ speechPitch: v })} />
+        <Button variant="secondary" icon="play" label={es.settings.voiceTest} onPress={() => testVoice(s.voiceId)} />
+        <Divider />
+      </View>
+
+      {/* Accesibilidad */}
+      <View style={{ gap: spacing.sm }}>
+        <SectionHeader title={es.settings.accessibility} />
+        <SettingRow
+          title={es.settings.haptics}
+          description={es.settings.hapticsHint}
+          control={
+            <Switch
+              value={s.hapticsEnabled}
+              onValueChange={(v) => {
+                s.update({ hapticsEnabled: v });
+                void haptic('light', v); // al activarlo se siente de inmediato
+              }}
+              accessibilityLabel={es.settings.haptics}
+            />
+          }
+        />
+        <SettingRow title={es.settings.reduceMotion} description={reduceMotion ? es.settings.reduceMotionOn : es.settings.reduceMotionOff} />
+        <Divider />
+      </View>
+
+      {/* Motor de IA */}
       <View style={{ gap: spacing.sm }}>
         <SectionHeader title={es.settings.aiEngine} />
-        <SettingRow title={es.settings.aiEngine} description={es.settings.aiEngineValue} onPress={() => navigation.navigate('AIEngine')} />
+        <SettingRow
+          title={es.settings.aiEngine}
+          description={s.aiProvider === 'focusread' ? es.settings.aiEngineValue : s.aiProvider}
+          onPress={() => navigation.navigate('AIEngine')}
+        />
         <Divider />
       </View>
 
+      {/* Cuenta */}
       <View style={{ gap: spacing.sm }}>
         <SectionHeader title={es.settings.account} />
         {email ? (
