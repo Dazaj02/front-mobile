@@ -1,7 +1,8 @@
-import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import React, { useRef } from 'react';
+import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useScrollToEndOnKeyboard } from '../layout/useScrollToEndOnKeyboard';
 import { useWindowClass } from '../layout/useWindowClass';
 import { useTheme } from '../theme/useTheme';
 
@@ -13,10 +14,14 @@ export interface AuthTemplateProps {
 export function AuthTemplate({ brand, children }: AuthTemplateProps) {
   const { colors, layout, spacing } = useTheme();
   const { gutter } = useWindowClass();
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToEndOnKeyboard(scrollRef);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.base }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {/* Con edge-to-edge (Android 15+) el sistema ya no redimensiona la ventana: "padding" es fiable. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
+          ref={scrollRef}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xl }}
         >

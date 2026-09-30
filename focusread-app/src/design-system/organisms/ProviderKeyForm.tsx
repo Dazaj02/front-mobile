@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, View } from 'react-native';
 
 import { AppText } from '../atoms/AppText';
 import { Button } from '../atoms/Button';
@@ -60,8 +60,9 @@ export function ProviderKeyForm(props: ProviderKeyFormProps) {
   } = props;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: spacing.lg }}>
+    // Va dentro de ScreenTemplate (que ya desplaza): sin ScrollView propio para no anidar scrolls.
+    <KeyboardAvoidingView behavior="padding">
+      <View style={{ gap: spacing.lg }}>
         <View style={{ gap: spacing.xs }}>
           <AppText variant="label" color="secondary">
             Proveedor
@@ -117,7 +118,7 @@ export function ProviderKeyForm(props: ProviderKeyFormProps) {
         />
         {testDisabledReason ? <Banner tone="info" message={testDisabledReason} /> : null}
         {testMessage ? <Banner tone={testMessage.ok ? 'info' : 'error'} message={testMessage.text} /> : null}
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }

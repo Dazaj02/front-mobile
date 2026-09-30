@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { AppText } from '../atoms/AppText';
 import { Button } from '../atoms/Button';
@@ -57,8 +57,8 @@ export function ImportSheet({
   const blocked = Boolean(disabledReason) || processing || textTooShort || urlEmpty;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: spacing.lg }}>
+    // El teclado lo gestiona el SheetTemplate que contiene esta hoja (un solo KeyboardAvoidingView).
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: spacing.lg }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} accessibilityRole="tablist">
           <Chip label="Texto" selected={mode === 'text'} onPress={() => onModeChange('text')} />
           <Chip label="Enlace" selected={mode === 'url'} onPress={() => onModeChange('url')} />
@@ -116,7 +116,6 @@ export function ImportSheet({
         {disabledReason ? <Banner tone="offline" message={disabledReason} /> : null}
 
         <Button label={processing ? 'Procesando…' : 'Crear dosis'} loading={processing} disabled={blocked && !processing} onPress={onSubmit} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </ScrollView>
   );
 }

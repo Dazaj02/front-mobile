@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '../atoms/AppText';
@@ -29,7 +29,7 @@ export function SheetTemplate({ visible, title, onClose, children }: SheetTempla
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <View style={{ flex: 1, justifyContent: 'flex-end', zIndex: layout.zIndex.sheet }}>
           <Pressable
             accessibilityRole="button"
