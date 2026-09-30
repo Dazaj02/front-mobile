@@ -15,6 +15,8 @@ jest.mock('../../services/tts', () => ({
   loadSpanishVoices: jest.fn(),
   speak: jest.fn(),
   stop: jest.fn(),
+  speakAny: jest.fn(),
+  stopAny: jest.fn(),
 }));
 
 const VOICES = [
@@ -74,6 +76,44 @@ describe('Ajustes › Voz', () => {
     expect(useSettingsStore.getState().voiceId).toBeNull();
   });
 
+  describe('voces de alta calidad (servidor, temporal)', () => {
+    const CLOUD = [
+      { id: 'es-MX-JorgeNeural', name: 'Jorge', language: 'es-MX', gender: 'male' as const },
+      { id: 'es-MX-DaliaNeural', name: 'Dalia', language: 'es-MX', gender: 'female' as const },
+    ];
+
+    it('sin servidor (mock) explica que llegarán con el servidor', async () => {
+      await renderSettings();
+      expect(await screen.findByText(es.settings.cloudVoicesMock)).toBeTruthy();
+    });
+
+    it('con servidor lista voces masculinas y femeninas reales y permite elegirlas (prefijo cloud:)', async () => {
+      mockC.tts = { listVoices: jest.fn(async () => CLOUD), synthesize: jest.fn() };
+      await renderSettings();
+      expect(await screen.findByRole('radio', { name: 'Jorge, es-MX · Masculina' })).toBeTruthy();
+      expect(screen.getByRole('radio', { name: 'Dalia, es-MX · Femenina' })).toBeTruthy();
+
+      await fireEvent.press(screen.getByRole('radio', { name: 'Jorge, es-MX · Masculina' }));
+      expect(useSettingsStore.getState().voiceId).toBe('cloud:es-MX-JorgeNeural');
+      await waitFor(async () => expect((await persisted()).voiceId).toBe('cloud:es-MX-JorgeNeural'));
+      expect(screen.getByRole('radio', { name: 'Jorge, es-MX · Masculina' }).props.accessibilityState).toMatchObject({ checked: true });
+    });
+
+    it('probar una voz de la nube la pide por su id con prefijo', async () => {
+      mockC.tts = { listVoices: jest.fn(async () => CLOUD), synthesize: jest.fn() };
+      await renderSettings();
+      await fireEvent.press(await screen.findByRole('button', { name: 'Probar voz Dalia' }));
+      expect(tts.speakAny).toHaveBeenCalledWith(es.settings.voiceTestSample, expect.objectContaining({ voiceId: 'cloud:es-MX-DaliaNeural' }));
+    });
+
+    it('si el servidor no las tiene disponibles lo dice y se sigue con la voz del sistema', async () => {
+      mockC.tts = { listVoices: jest.fn().mockRejectedValue(new Error('404')), synthesize: jest.fn() };
+      await renderSettings();
+      expect(await screen.findByText(es.settings.cloudVoicesUnavailable)).toBeTruthy();
+      expect(screen.getByRole('radio', { name: 'Paulina, es-MX' })).toBeTruthy(); // las del sistema siguen ahí
+    });
+  });
+
   it('si no hay voces en español lo dice', async () => {
     (tts.loadSpanishVoices as jest.Mock).mockResolvedValue([]);
     await renderSettings();
@@ -112,13 +152,13 @@ describe('Ajustes › Voz', () => {
     useSettingsStore.setState({ voiceId: 'es-mx-1', speechRate: 1.25, speechPitch: 0.9 });
     await renderSettings();
     await fireEvent.press(await screen.findByRole('button', { name: es.settings.voiceTest }));
-    expect(tts.speak).toHaveBeenCalledWith(es.settings.voiceTestSample, { voiceId: 'es-mx-1', rate: 1.25, pitch: 0.9 });
+    expect(tts.speakAny).toHaveBeenCalledWith(es.settings.voiceTestSample, { voiceId: 'es-mx-1', rate: 1.25, pitch: 0.9 });
   });
 
   it('el botón de probar de cada voz usa esa voz', async () => {
     await renderSettings();
     await fireEvent.press(await screen.findByRole('button', { name: 'Probar voz Jorge' }));
-    expect(tts.speak).toHaveBeenCalledWith(es.settings.voiceTestSample, expect.objectContaining({ voiceId: 'es-es-1' }));
+    expect(tts.speakAny).toHaveBeenCalledWith(es.settings.voiceTestSample, expect.objectContaining({ voiceId: 'es-es-1' }));
   });
 });
 

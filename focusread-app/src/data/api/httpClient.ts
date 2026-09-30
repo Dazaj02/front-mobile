@@ -32,10 +32,11 @@ export function createHttpClient(options: HttpClientOptions) {
   const { baseUrl, getToken, timeoutMs = 90_000 } = options;
   const fetchImpl = options.fetchImpl ?? fetch;
 
-  async function request<S extends z.ZodType | undefined = undefined>(
+  // Envía la solicitud autenticada y devuelve la respuesta OK; convierte todo fallo en AppError.
+  async function send(
     path: string,
-    opts: RequestOptions<S> = {},
-  ): Promise<S extends z.ZodType ? z.infer<S> : void> {
+    opts: { method?: string; body?: unknown; headers?: Record<string, string>; accept: string },
+  ): Promise<{ response: Response; requestId?: string }> {
     const token = await getToken();
     if (!token) throw new AppError('UNAUTHORIZED', 'No hay sesión activa');
 
@@ -46,7 +47,7 @@ export function createHttpClient(options: HttpClientOptions) {
       response = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
         method: opts.method ?? 'GET',
         headers: {
-          Accept: 'application/json',
+          Accept: opts.accept,
           ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
           ...opts.headers,
           Authorization: `Bearer ${token}`,
@@ -82,7 +83,14 @@ export function createHttpClient(options: HttpClientOptions) {
       const code = STATUS_TO_CODE[response.status] ?? 'INTERNAL';
       throw new AppError(code, `Error del servidor (${response.status})`, { status: response.status, retryAfterSeconds, requestId });
     }
+    return { response, requestId };
+  }
 
+  async function request<S extends z.ZodType | undefined = undefined>(
+    path: string,
+    opts: RequestOptions<S> = {},
+  ): Promise<S extends z.ZodType ? z.infer<S> : void> {
+    const { response, requestId } = await send(path, { ...opts, accept: 'application/json' });
     if (!opts.schema) return undefined as never;
     let json: unknown;
     try {
@@ -97,7 +105,19 @@ export function createHttpClient(options: HttpClientOptions) {
     return parsed.data as never;
   }
 
-  return { request };
+  // Respuestas binarias (audio). Los errores siguen llegando como ApiError JSON.
+  async function requestBytes(path: string, opts: { method?: 'GET' | 'POST'; body?: unknown; accept?: string } = {}): Promise<Uint8Array> {
+    const { response, requestId } = await send(path, { ...opts, accept: opts.accept ?? 'audio/mpeg' });
+    try {
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (bytes.length === 0) throw new Error('vacío');
+      return bytes;
+    } catch (e) {
+      throw new AppError('INVALID_RESPONSE', 'Audio del servidor no válido', { status: response.status, requestId, cause: e });
+    }
+  }
+
+  return { request, requestBytes };
 }
 
 export type HttpClient = ReturnType<typeof createHttpClient>;

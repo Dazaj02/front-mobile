@@ -1,5 +1,9 @@
 import * as Speech from 'expo-speech';
 
+import { fromCloudVoiceId, isCloudVoiceId } from '../../domain/ttsProposal';
+import type { CloudSpeaker } from './cloud';
+import { splitForSpeech } from './split';
+
 export interface VoiceInfo {
   id: string;
   name: string;
@@ -34,27 +38,7 @@ export async function loadSpanishVoices({ retries = 3, delayMs = 600, sleep = (m
   return [];
 }
 
-// Parte el texto en segmentos que respetan el límite del motor, cortando en oraciones.
-export function splitForSpeech(text: string, maxLength: number): string[] {
-  const clean = text.replace(/\s+/g, ' ').trim();
-  if (clean.length <= maxLength) return clean ? [clean] : [];
-  const segments: string[] = [];
-  let current = '';
-  for (const sentence of clean.match(/[^.!?…]+[.!?…]*\s*/g) ?? [clean]) {
-    if ((current + sentence).length > maxLength && current) {
-      segments.push(current.trim());
-      current = '';
-    }
-    let rest = sentence;
-    while (rest.length > maxLength) {
-      segments.push(rest.slice(0, maxLength).trim());
-      rest = rest.slice(maxLength);
-    }
-    current += rest;
-  }
-  if (current.trim()) segments.push(current.trim());
-  return segments;
-}
+export { splitForSpeech } from './split';
 
 export interface SpeakOptions {
   voiceId?: string | null;
@@ -92,4 +76,39 @@ export function speak(text: string, { voiceId, rate = 1, pitch = 1, onDone, onEr
 export function stop(): void {
   session++;
   Speech.stop();
+}
+
+// ---------- Enrutador: voz del sistema o voz en la nube (temporal, sujeto a cambios) ----------
+let cloud: CloudSpeaker | null = null;
+
+// Lo registra el contenedor live (F8) cuando existe el backend de voces.
+export function registerCloudSpeaker(speaker: CloudSpeaker | null): void {
+  cloud = speaker;
+}
+
+export function isCloudAvailable(): boolean {
+  return cloud !== null;
+}
+
+// Usa la voz en la nube si el `voiceId` lleva el prefijo "cloud:" y hay servidor; si no (o si la nube
+// falla: sin red, cuota, etc.) sigue con la voz predeterminada del sistema para no dejar al usuario sin audio.
+export function speakAny(text: string, opts: SpeakOptions = {}): void {
+  const { voiceId } = opts;
+  if (isCloudVoiceId(voiceId) && cloud) {
+    stop();
+    cloud.speak(text, {
+      voiceId: fromCloudVoiceId(voiceId),
+      rate: opts.rate,
+      onDone: opts.onDone,
+      onError: () => speak(text, { rate: opts.rate, pitch: opts.pitch, onDone: opts.onDone, onError: opts.onError }),
+    });
+    return;
+  }
+  cloud?.stop();
+  speak(text, { ...opts, voiceId: isCloudVoiceId(voiceId) ? null : voiceId });
+}
+
+export function stopAny(): void {
+  cloud?.stop();
+  stop();
 }

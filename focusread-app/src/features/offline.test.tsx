@@ -22,7 +22,7 @@ let mockC: TestContainer;
 jest.mock('../data/container', () => ({ getContainer: () => mockC }));
 const mockClearUserData = jest.fn(async () => {});
 jest.mock('../services/session/clearLocalData', () => ({ clearUserData: () => mockClearUserData() }));
-jest.mock('../services/tts', () => ({ loadSpanishVoices: jest.fn(async () => []), speak: jest.fn(), stop: jest.fn() }));
+jest.mock('../services/tts', () => ({ loadSpanishVoices: jest.fn(async () => []), speak: jest.fn(), stop: jest.fn(), speakAny: jest.fn(), stopAny: jest.fn() }));
 
 const goOffline = async () => {
   await act(async () => Net.__set({ isConnected: false, isInternetReachable: false }));

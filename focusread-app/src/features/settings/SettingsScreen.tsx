@@ -18,14 +18,16 @@ import { VoiceOption } from '../../design-system/molecules/VoiceOption';
 import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { THEME_MODES } from '../../design-system/tokens';
+import { getContainer } from '../../data/container';
+import { toCloudVoiceId } from '../../domain/ttsProposal';
 import { es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
 import { performSignOut, syncBeforeSignOut } from '../../services/session/signOut';
-import { speak } from '../../services/tts';
+import { speakAny } from '../../services/tts';
 import { useSessionStore } from '../../state/sessionStore';
 import { useSettingsStore } from '../../state/settingsStore';
-import { useSpanishVoices } from './useVoices';
+import { useCloudVoices, useSpanishVoices } from './useVoices';
 
 const DOSE_OPTIONS = [1.5, 2.5, 3.5] as const;
 const formatFactor = (v: number) => `${v.toFixed(1)}×`;
@@ -52,8 +54,11 @@ export function SettingsScreen() {
     ]);
   };
 
+  const cloudGateway = getContainer().tts;
+  const cloudVoices = useCloudVoices();
+
   const testVoice = (voiceId: string | null) =>
-    speak(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
+    speakAny(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
 
   return (
     <AppScreen header={{ title: es.settings.title }}>
@@ -127,6 +132,39 @@ export function SettingsScreen() {
         ) : (
           <AppText variant="caption" color="secondary">
             {es.settings.voicesEmpty}
+          </AppText>
+        )}
+        {/* Voces de alta calidad del servidor (temporal): masculinas y femeninas reales */}
+        <AppText variant="label" color="secondary" accessibilityRole="header">
+          {es.settings.cloudVoices}
+        </AppText>
+        {!cloudGateway ? (
+          <AppText variant="caption" color="muted">
+            {es.settings.cloudVoicesMock}
+          </AppText>
+        ) : cloudVoices.isLoading ? (
+          <AppText variant="caption" color="muted">
+            {es.settings.cloudVoicesLoading}
+          </AppText>
+        ) : cloudVoices.data && cloudVoices.data.length > 0 ? (
+          <View accessibilityRole="radiogroup">
+            {cloudVoices.data.map((v) => {
+              const id = toCloudVoiceId(v.id);
+              return (
+                <VoiceOption
+                  key={id}
+                  name={v.name}
+                  language={`${v.language} · ${es.settings.genders[v.gender]}`}
+                  selected={s.voiceId === id}
+                  onSelect={() => s.update({ voiceId: id })}
+                  onPreview={() => testVoice(id)}
+                />
+              );
+            })}
+          </View>
+        ) : (
+          <AppText variant="caption" color="muted">
+            {es.settings.cloudVoicesUnavailable}
           </AppText>
         )}
         <AppText variant="caption" color="muted">

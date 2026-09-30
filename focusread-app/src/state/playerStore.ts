@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { speak, stop } from '../services/tts';
+import { speakAny, stopAny } from '../services/tts';
 import { useSettingsStore } from './settingsStore';
 
 export interface PlayerItem {
@@ -23,7 +23,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   const start = (item: PlayerItem) => {
     const { voiceId, speechRate, speechPitch } = useSettingsStore.getState();
     set({ item, playing: true });
-    speak(item.text, {
+    speakAny(item.text, {
       voiceId,
       rate: speechRate,
       pitch: speechPitch,
@@ -41,14 +41,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const { item, playing } = get();
       if (!item) return;
       if (playing) {
-        stop();
+        stopAny();
         set({ playing: false });
       } else {
         start(item);
       }
     },
     close: () => {
-      stop();
+      stopAny();
       set({ item: null, playing: false });
     },
   };

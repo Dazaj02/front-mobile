@@ -7,6 +7,7 @@ import type {
   SecretStore,
   SettingsRepository,
 } from '../domain/ports';
+import type { CloudTtsGateway } from './api/HttpTtsGateway';
 import type { SyncService } from '../services/sync/SyncService';
 import type { SyncedSettingsRepository } from './offline/SyncedSettingsRepository';
 import { getDb } from './local/db';
@@ -35,6 +36,8 @@ export interface Container {
   // Solo en modo live (F8): sincronización con el servidor. En mock no hay remoto.
   sync?: SyncService;
   settingsSync?: SyncedSettingsRepository;
+  // Voces de alta calidad vía backend (propuesta temporal, ver docs/PROPUESTA_TTS_NUBE.md). Solo live.
+  tts?: CloudTtsGateway;
 }
 
 export function readDataMode(value: string | undefined = process.env.EXPO_PUBLIC_DATA_MODE): DataMode {

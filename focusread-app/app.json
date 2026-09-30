@@ -21,7 +21,9 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-font",
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-audio",
+      "expo-asset"
     ],
     "scheme": "focusread"
   }

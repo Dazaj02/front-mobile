@@ -69,6 +69,10 @@
 | D56 | F7 | `useSyncTriggers` agenda además un reintento temporizado con el backoff de la outbox (el plan solo pedía disparadores de primer plano, reconexión y dosis completada) | Aceptada |
 | D57 | F7 | Falta la **prueba manual en modo avión** (plan F7): David debe verificarla | Pendiente David |
 
+| D58 | F7+ | **Voces en la nube (opción 3), temporal.** Implementado en el frontend y desactivado hasta que exista el backend: `ttsProposal.ts`, `HttpTtsGateway`, `cloud.ts`, `expoAudioPlayer.ts`, enrutador `speakAny` con caída automática a la voz del sistema, sección en Ajustes › Voz. Deps nuevas: `expo-audio`, `expo-file-system`. Propuesta completa en `docs/PROPUESTA_TTS_NUBE.md` | Aceptada (temporal) |
+| D59 | F7+ | **Solicitud de cambio de contrato NO aplicada:** endpoints `GET /v1/tts/voices` y `POST /v1/tts`. El contrato está congelado: hay que llevar la propuesta al agente backend (y que la apruebe David). Se evitó tocar `UserSettings` usando el prefijo `cloud:` en `voiceId` | **Pendiente: David → agente backend** |
+| D60 | F7+ | `container.tts` y `enableCloudTts()` los debe cablear F8 (contenedor live) | Pendiente F8 |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |
