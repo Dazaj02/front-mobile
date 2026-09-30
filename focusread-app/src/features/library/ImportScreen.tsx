@@ -33,6 +33,8 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
   const providerLabel = providers.data?.find((p) => p.id === provider)?.name ?? es.settings.aiEngineValue;
 
   const close = () => navigation.goBack();
+  // Sin servidor (modo mock) solo funciona el proveedor incluido: se avisa antes de intentar.
+  const mockNeedsServer = getContainer().mode === 'mock' && provider !== 'focusread';
 
   const submit = async () => {
     setStatus('processing');
@@ -76,6 +78,7 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
         providerLabel={providerLabel}
         status={status}
         errorMessage={error}
+        disabledReason={mockNeedsServer ? es.importSheet.mockNeedsServer : undefined}
         onSubmit={submit}
         completed={degraded}
         completedMessage={es.importSheet.created}

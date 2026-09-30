@@ -1,3 +1,4 @@
+import { Linking } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '../../domain/defaults';
@@ -93,6 +94,18 @@ describe('Ajustes › Voz', () => {
     await fireEvent(screen.getByLabelText(es.settings.voicePitch), 'slidingComplete', 0.7);
     expect(useSettingsStore.getState()).toMatchObject({ speechRate: 1.5, speechPitch: 0.7 });
     await waitFor(async () => expect(await persisted()).toMatchObject({ speechRate: 1.5, speechPitch: 0.7 }));
+  });
+
+  it('permite abrir los ajustes de voz del sistema para instalar más voces y actualizar la lista', async () => {
+    const send = jest.spyOn(Linking, 'sendIntent').mockResolvedValue();
+    await renderSettings();
+    await fireEvent.press(await screen.findByRole('button', { name: es.settings.voiceSystemSettings }));
+    expect(send).toHaveBeenCalledWith('android.settings.TTS_SETTINGS');
+
+    (tts.loadSpanishVoices as jest.Mock).mockClear();
+    await fireEvent.press(screen.getByRole('button', { name: es.settings.voiceRefresh }));
+    await waitFor(() => expect(tts.loadSpanishVoices).toHaveBeenCalledTimes(1));
+    send.mockRestore();
   });
 
   it('"Probar" habla con la voz, velocidad y tono actuales', async () => {

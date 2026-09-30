@@ -66,6 +66,9 @@ export const es = {
     voicesLoading: 'Buscando voces en español…',
     voicesEmpty: 'No encontramos voces en español. Instala una en los ajustes de voz del teléfono.',
     voiceTestLabel: (name: string) => `Probar voz ${name}`,
+    voicesHint: 'Las voces disponibles dependen del motor de voz de tu teléfono. Puedes instalar más en los ajustes del sistema.',
+    voiceSystemSettings: 'Abrir ajustes de voz del sistema',
+    voiceRefresh: 'Actualizar lista de voces',
     accessibility: 'Accesibilidad',
     haptics: 'Vibración',
     hapticsHint: 'Respuesta háptica al tocar y al completar dosis.',
@@ -146,6 +149,7 @@ export const es = {
     degraded: 'Creamos las dosis, pero sin resumen ni preguntas: la IA no respondió a tiempo.',
     done: 'Listo',
     created: 'Tu artículo ya está en la biblioteca.',
+    mockNeedsServer: 'Los proveedores con key propia necesitan el servidor. Elige FocusRead en Ajustes › Motor de IA para importar ahora.',
   },
   errors: {
     UNAUTHORIZED: 'Tu sesión expiró. Inicia sesión de nuevo.',

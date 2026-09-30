@@ -97,7 +97,19 @@ describe('Importar', () => {
     expect(await screen.findByText('pantalla:Home')).toBeTruthy();
   });
 
+  it('en modo mock con un proveedor de key propia avisa y bloquea el envío (no falla tras procesar)', async () => {
+    useSettingsStore.setState({ aiProvider: 'openai', aiModel: 'default' });
+    const process = jest.spyOn(mockC.ai, 'process');
+    await renderImport();
+    await fireEvent.changeText(await screen.findByLabelText('Texto a importar'), LONG_TEXT);
+    expect(screen.getByText(es.importSheet.mockNeedsServer)).toBeTruthy();
+    expect(submit().props.accessibilityState).toMatchObject({ disabled: true });
+    await fireEvent.press(submit());
+    expect(process).not.toHaveBeenCalled();
+  });
+
   it('con un proveedor de key propia usa la key guardada y la envía solo como argumento de key', async () => {
+    mockC.mode = 'live'; // con servidor sí se permiten proveedores con key propia
     await mockC.secrets.setAIKey('openai', 'sk-prueba-123');
     useSettingsStore.setState({ aiProvider: 'openai', aiModel: 'default' });
     const process = jest.spyOn(mockC.ai, 'process').mockRejectedValue(new AppError('PROVIDER_UNAVAILABLE', 'x'));
