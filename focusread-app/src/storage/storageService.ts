@@ -67,7 +67,11 @@ export class StorageService {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (data) {
-        return { ...DEFAULT_APP_SETTINGS, ...JSON.parse(data) };
+        // Migración de seguridad: las versiones anteriores guardaban la API key de DeepSeek en claro.
+        const { deepSeekApiKey, ...stored } = JSON.parse(data) as Record<string, unknown>;
+        const merged = { ...DEFAULT_APP_SETTINGS, ...stored };
+        if (deepSeekApiKey !== undefined) await this.saveSettings(merged);
+        return merged;
       }
       await this.saveSettings(DEFAULT_APP_SETTINGS);
       return DEFAULT_APP_SETTINGS;

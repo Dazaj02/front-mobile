@@ -13,7 +13,6 @@ export const INITIAL_USER_STATS: UserStats = {
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  deepSeekApiKey: '',
   targetDurationMinutes: 2.5,
   synthesisDepth: 'keypoints',
   retentionQuizEnabled: true,

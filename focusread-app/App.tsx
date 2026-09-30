@@ -23,7 +23,7 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ZenReaderScreen } from './src/screens/ZenReaderScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { StorageService } from './src/storage/storageService';
-import { DeepSeekService } from './src/services/deepSeekService';
+import { importArticleLegacy } from './src/legacy/legacyImport';
 import { AudioService } from './src/services/audioService';
 import { Article, UserStats, AppSettings, UserProfile } from './src/types';
 import { useFonts } from 'expo-font';
@@ -228,7 +228,7 @@ function LegacyApp() {
     AudioService.triggerHaptic('medium');
 
     try {
-      const newArticle = await DeepSeekService.processArticle(importInput.trim(), settings);
+      const newArticle = importArticleLegacy(importInput, settings);
       const updated = [newArticle, ...articles];
       setArticles(updated);
       await StorageService.saveArticles(updated);

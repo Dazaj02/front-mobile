@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { LocalSettingsRepository } from '../data/local/settingsCache';
+import { getContainer } from '../data/container';
 import type { UserSettings } from '../domain/contract';
 import { DEFAULT_SETTINGS } from '../domain/defaults';
 import type { SettingsRepository } from '../domain/ports';
@@ -49,4 +49,10 @@ export function createSettingsStore(repo: SettingsRepository) {
   }));
 }
 
-export const useSettingsStore = createSettingsStore(new LocalSettingsRepository());
+// El contenedor se resuelve en cada llamada: en mock es SQLite local, en live se sincroniza con Supabase (F8).
+const containerSettings: SettingsRepository = {
+  get: () => getContainer().settings.get(),
+  update: (partial) => getContainer().settings.update(partial),
+};
+
+export const useSettingsStore = createSettingsStore(containerSettings);

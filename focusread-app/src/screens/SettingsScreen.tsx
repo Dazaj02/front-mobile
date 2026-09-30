@@ -33,8 +33,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onLogout,
 }) => {
   const colors: ThemeColors = useLegacyColors();
-  const [apiKeyInput, setApiKeyInput] = useState(settings.deepSeekApiKey || '');
-  const [showApiKey, setShowApiKey] = useState(false);
   const [systemVoices, setSystemVoices] = useState<SystemVoiceInfo[]>([]);
 
   useEffect(() => {
@@ -44,12 +42,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const loadSystemVoices = async () => {
     const list = await AudioService.getAvailableVoices();
     setSystemVoices(list);
-  };
-
-  const handleSaveApiKey = () => {
-    onUpdateSettings({ ...settings, deepSeekApiKey: apiKeyInput.trim() });
-    AudioService.triggerHaptic('success');
-    Alert.alert('DeepSeek API Key', 'Clave guardada exitosamente en el almacenamiento local seguro.');
   };
 
   const handleDurationSelect = (mins: number) => {
@@ -173,43 +165,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={[styles.cardSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionTitleRow}>
           <Ionicons name="sparkles" size={19} color={colors.primaryContainer} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Motor de IA y DeepSeek</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Motor de IA</Text>
         </View>
 
-        {/* Entrada API Key DeepSeek */}
+        {/* La key propia (BYOK) volverá en la pantalla "Motor de IA" (F6), guardada solo en SecureStore. */}
         <View style={styles.settingField}>
-          <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
-            DeepSeek API Key (deepseek-chat)
-          </Text>
-          <View style={[styles.apiKeyInputRow, { backgroundColor: colors.surfaceContainerLow, borderColor: colors.border }]}>
-            <TextInput
-              style={[styles.apiKeyInput, { color: colors.text }]}
-              placeholder="sk-..."
-              placeholderTextColor={colors.textMuted}
-              value={apiKeyInput}
-              secureTextEntry={!showApiKey}
-              onChangeText={setApiKeyInput}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <TouchableOpacity onPress={() => setShowApiKey(!showApiKey)} style={{ padding: 6 }}>
-              <Ionicons
-                name={showApiKey ? 'eye-off-outline' : 'eye-outline'}
-                size={18}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.saveKeyBtn, { backgroundColor: colors.primaryContainer }]}
-              onPress={handleSaveApiKey}
-            >
-              <Text style={styles.saveKeyBtnText}>Guardar</Text>
-            </TouchableOpacity>
-          </View>
           <Text style={[styles.fieldHint, { color: colors.textMuted }]}>
-            {settings.deepSeekApiKey
-              ? '✓ API Key configurada. Consumo aprox: ~$0.002 por cada 10 artículos.'
-              : 'Sin API Key se usará el motor de parsing local inteligente.'}
+            Por ahora el texto se fragmenta en tu dispositivo. La conexión con IA llegará con el servidor de FocusRead.
           </Text>
         </View>
 

@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // crypto.getRandomValues para AES (LargeSecureStore) y UUID
 import { registerRootComponent } from 'expo';
 
 import App from './App';

@@ -56,7 +56,6 @@ export interface UserProfile {
 }
 
 export interface AppSettings {
-  deepSeekApiKey: string;
   targetDurationMinutes: number; // 1.5, 2.5, 3.5
   synthesisDepth: 'essential' | 'keypoints' | 'deep';
   retentionQuizEnabled: boolean;

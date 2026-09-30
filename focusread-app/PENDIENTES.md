@@ -31,6 +31,16 @@
 | D22 | F3 | Scrim de `SheetTemplate` oculto a TalkBack (`accessibilityViewIsModal`); el cierre accesible es el botón "Cerrar" | Aceptada |
 | D23 | F3 | `contract.ts` verificado contra el plan: 0 diferencias (A16) | Resuelta |
 
+| D24 | F4 | **No se eliminaron `storageService.ts` ni `mockArticles.ts`** (el plan pide borrarlos en F4): las pantallas viejas dependen de ellos y de su modelo `Article`. Sí se eliminó `deepSeekService.ts`, el campo `deepSeekApiKey` y su UI; `StorageService.getSettings` borra la key en claro de instalaciones previas | Pendiente → se borran en F5/F6 junto con las pantallas viejas |
+| D25 | F4 | Tabla extra `reading_sessions` (sesiones locales). El plan solo listaba la outbox, pero en modo mock las sesiones necesitan fuente de verdad local y en live serán caché | Aceptada |
+| D26 | F4 | Importar en la app vieja pasa por `src/legacy/legacyImport.ts` (fragmentador local, solo texto) | Pendiente → se borra en F6 |
+| D27 | F4 | Puertos con `AuthSession {userId,email}`, `AuthCallbackResult` y `ArticleFilter` definidos por mí (el plan solo daba los nombres de métodos). `LocalArticleRepository.save()` existe fuera del puerto (la app nunca inserta artículos; lo usan el mock y la caché) | Aceptada |
+| D28 | F4 | `AppError` con códigos de cliente extra: `NETWORK_ERROR`, `CLIENT_TIMEOUT`, `INVALID_RESPONSE`, `INVALID_CREDENTIALS`, `EMAIL_NOT_CONFIRMED`, `NOT_AVAILABLE_OFFLINE`. No tocan el contrato: no viajan por la API | Aceptada |
+| D29 | F4 | Chunker: un párrafo de 1.3–1.5 × objetivo se trata como unidad atómica y puede superar 1.3 × (el plan solo exime a "oración única"). Con > 20 dosis sugiere la menor duración mayor que sí cabe | **Confirmar con el agente backend** que su implementación coincide en estos bordes (riesgo de divergencia) |
+| D30 | F4 | Racha: si hoy aún no hay sesión completada, cuenta desde ayer (no se rompe hasta pasar un día entero sin leer) | Aceptada (decisión de producto) |
+| D31 | F4 | `sql.js` como devDependency para probar SQLite/migraciones en Jest; `jest.setup.js` fija `TZ=America/Mexico_City` | Aceptada |
+| D32 | F4 | Los timeouts/reintentos de 401 (refresh) no están en `httpClient`: se añaden en F8 | Pendiente F8 |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |
@@ -42,7 +52,10 @@
 | P5 | Nombre final de la app, ícono adaptativo (fondo `#E6F4FE` del template) y `version`/`versionCode` | F9 | Nombre/ícono finales de David |
 | P6 | `expo-build-properties` sin configurar (R8/shrink) y `eas.json` | F9 | Cuenta Expo/EAS de David |
 | P7 | `predictiveBackGestureEnabled: false`: revisar junto al manejo del botón atrás | F5 | — |
-| P8 | Ports restantes (Auth, Article, Progress, AIGateway, SecretStore) | F4 | — |
+| P8 | Ports restantes (Auth, Article, Progress, AIGateway, SecretStore) | ~~F4~~ Resuelto | — |
+| P12 | Confirmar con el agente backend los bordes del chunker (D29) y el mensaje/código de errores | Antes de H1 | **David**: pasar D29 al agente backend |
+| P13 | `DailyProgressCard` sin meta diaria (D19): definir en F6 | F6 | Decisión de David |
+| P14 | Verificar en Expo Go que la app arranca con SQLite (los ajustes ahora viven en `focusread.db`) | Ahora | **David** |
 | P9 | Reglas ESLint de dependencia atómica | ~~F3~~ Resuelto: todas en `error` | — |
 | P10 | `BottomTabBar` y `SheetTemplate`: comportamiento real con barra de gestos y teclado en Android edge-to-edge | F3 (verificación) / F5 | **David**: matriz responsive (sección 3) |
 | P11 | `KeyboardAvoidingView` usa `behavior="height"` en Android; ajustar si el teclado tapa campos | F5 (auth) | **David**: probar en dispositivo |
