@@ -45,6 +45,16 @@ export interface UserStats {
 
 export type VoiceSpeakerId = 'Elena' | 'Marcos' | 'Lucia' | 'Mateo' | 'Sofia';
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  plan: 'free' | 'pro' | 'unlimited';
+  avatarUrl?: string;
+  isLoggedIn: boolean;
+  joinedDate?: string;
+}
+
 export interface AppSettings {
   deepSeekApiKey: string;
   targetDurationMinutes: number; // 1.5, 2.5, 3.5
@@ -57,3 +67,4 @@ export interface AppSettings {
   karaokeHighlightEnabled: boolean;
   binauralBeatEnabled: boolean;
 }
+

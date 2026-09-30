@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Article, UserStats, AppSettings } from '../types';
+import { Article, UserStats, AppSettings, UserProfile } from '../types';
 import { INITIAL_ARTICLES, INITIAL_USER_STATS, DEFAULT_APP_SETTINGS } from '../data/mockArticles';
 
 const STORAGE_KEYS = {
@@ -7,7 +7,18 @@ const STORAGE_KEYS = {
   USER_STATS: '@focusread_stats',
   THEME_MODE: '@focusread_theme',
   SETTINGS: '@focusread_settings',
+  USER_PROFILE: '@focusread_user_profile',
 };
+
+export const DEFAULT_USER_PROFILE: UserProfile = {
+  id: 'usr-alex-1',
+  name: 'Alex Rivera',
+  email: 'alex.rivera@focusread.ai',
+  plan: 'pro',
+  isLoggedIn: true,
+  joinedDate: 'Marzo 2026',
+};
+
 
 export class StorageService {
   static async getArticles(): Promise<Article[]> {
@@ -116,4 +127,38 @@ export class StorageService {
     await this.saveArticles(updated);
     return updated;
   }
+
+  static async getUserProfile(): Promise<UserProfile> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+      if (data) {
+        return JSON.parse(data);
+      }
+      await this.saveUserProfile(DEFAULT_USER_PROFILE);
+      return DEFAULT_USER_PROFILE;
+    } catch {
+      return DEFAULT_USER_PROFILE;
+    }
+  }
+
+  static async saveUserProfile(profile: UserProfile): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+    } catch (err) {
+      console.warn('Error saving user profile:', err);
+    }
+  }
+
+  static async logoutUser(): Promise<UserProfile> {
+    const loggedOut: UserProfile = {
+      id: '',
+      name: '',
+      email: '',
+      plan: 'free',
+      isLoggedIn: false,
+    };
+    await this.saveUserProfile(loggedOut);
+    return loggedOut;
+  }
 }
+
