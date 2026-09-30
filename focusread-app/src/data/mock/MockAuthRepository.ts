@@ -32,6 +32,10 @@ export class MockAuthRepository implements AuthRepository {
     return { needsEmailVerification: true };
   }
 
+  async resendVerification(email: string): Promise<void> {
+    if (!EMAIL_RE.test(email.trim())) throw new AppError('VALIDATION_ERROR', 'Correo no válido');
+  }
+
   async signIn(email: string, password: string): Promise<AuthSession> {
     this.validate(email, password);
     const normalized = normalizeEmail(email);

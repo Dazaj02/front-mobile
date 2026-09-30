@@ -28,6 +28,7 @@ export interface AuthRepository {
   getSession(): Promise<AuthSession | null>;
   onAuthChange(cb: (session: AuthSession | null) => void): () => void; // devuelve la función para desuscribirse
   signUp(email: string, password: string): Promise<{ needsEmailVerification: boolean }>;
+  resendVerification(email: string): Promise<void>;
   signIn(email: string, password: string): Promise<AuthSession>;
   signOut(): Promise<void>;
   requestPasswordReset(email: string): Promise<void>;

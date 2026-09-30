@@ -22,6 +22,7 @@ export interface AuthFormProps {
   submitLabel: string;
   values: Record<AuthField, string>;
   errors?: Partial<Record<AuthField | 'form', string>>;
+  notice?: string; // mensaje informativo (p. ej. "Correo verificado")
   loading?: boolean;
   onChange: (field: AuthField, value: string) => void;
   onSubmit: () => void;
@@ -36,7 +37,7 @@ const FIELDS: Record<AuthVariant, readonly AuthField[]> = {
   reset: ['password', 'confirm'],
 };
 
-export function AuthForm({ variant, title, submitLabel, values, errors = {}, loading = false, onChange, onSubmit, links = [] }: AuthFormProps) {
+export function AuthForm({ variant, title, submitLabel, values, errors = {}, notice, loading = false, onChange, onSubmit, links = [] }: AuthFormProps) {
   const { spacing } = useTheme();
   const fields = FIELDS[variant];
   const newPassword = variant === 'register' || variant === 'reset';
@@ -45,6 +46,7 @@ export function AuthForm({ variant, title, submitLabel, values, errors = {}, loa
       <AppText variant="headline" accessibilityRole="header">
         {title}
       </AppText>
+      {notice ? <Banner tone="info" message={notice} /> : null}
       {errors.form ? <Banner tone="error" message={errors.form} /> : null}
       {fields.includes('email') ? (
         <FormField

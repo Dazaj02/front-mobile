@@ -2,6 +2,7 @@ import type {
   AIGateway,
   ArticleRepository,
   AuthRepository,
+  AuthSession,
   ProgressRepository,
   SecretStore,
   SettingsRepository,
@@ -27,6 +28,8 @@ export interface Container {
   ai: AIGateway;
   secrets: SecretStore;
   outbox: Outbox;
+  // Solo existe en desarrollo y en modo mock: entrar sin formulario. Nunca en release.
+  devSignIn?: () => Promise<AuthSession>;
 }
 
 export function readDataMode(value: string | undefined = process.env.EXPO_PUBLIC_DATA_MODE): DataMode {
@@ -43,9 +46,11 @@ export function getContainer(): Container {
     throw new Error('El modo live se implementa en F8: usa EXPO_PUBLIC_DATA_MODE=mock');
   }
   const localArticles = new LocalArticleRepository(getDb);
+  const auth = new MockAuthRepository();
   instance = {
     mode,
-    auth: new MockAuthRepository(),
+    auth,
+    devSignIn: __DEV__ ? () => auth.signInDemo() : undefined,
     articles: localArticles,
     localArticles,
     progress: new LocalProgressRepository(getDb),
