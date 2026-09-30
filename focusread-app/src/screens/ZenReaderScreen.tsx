@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Article, MicroDose } from '../types';
 import type { ThemeMode } from '../design-system/tokens';
+import { useSettingsStore } from '../state/settingsStore';
 import { ThemeColors, useLegacyColors } from '../legacy/useLegacyColors';
 import { AudioService } from '../services/audioService';
 
@@ -45,7 +46,10 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
   const { width: windowWidth } = useWindowDimensions();
   const colors: ThemeColors = useLegacyColors();
   const [activeDoseIdx, setActiveDoseIdx] = useState(currentDoseIndex);
-  const [fontSize, setFontSize] = useState<number>(18);
+  // El tamaño vive en settingsStore (persistente, compartido con el resto de la app).
+  const readerFontScale = useSettingsStore((s) => s.readerFontScale);
+  const setReaderFontScale = useSettingsStore((s) => s.setReaderFontScale);
+  const fontSize = 18 * readerFontScale;
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
 
@@ -181,7 +185,9 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
         <View style={styles.headerRightActions}>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={() => setFontSize(prev => (prev >= 24 ? 16 : prev + 2))}
+            accessibilityRole="button"
+            accessibilityLabel="Cambiar tamaño de letra"
+            onPress={() => setReaderFontScale(readerFontScale >= 1.6 ? 0.8 : readerFontScale + 0.1)}
           >
             <Ionicons name="text-outline" size={20} color={colors.text} />
           </TouchableOpacity>
