@@ -36,6 +36,18 @@ describe('settingsStore', () => {
     expect(second.getState().hydrated).toBe(true);
   });
 
+  it('revierte el estado si falla el guardado', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const repo = memoryRepo();
+    repo.update = () => Promise.reject(new Error('disco lleno'));
+    const store = createSettingsStore(repo);
+    store.getState().setTheme('dark');
+    expect(store.getState().theme).toBe('dark');
+    await flush();
+    expect(store.getState().theme).toBe('paper');
+    warn.mockRestore();
+  });
+
   it('ajusta la escala a pasos de 0.1 dentro de 0.8–1.6', async () => {
     const store = createSettingsStore(memoryRepo());
     store.getState().setReaderFontScale(3);

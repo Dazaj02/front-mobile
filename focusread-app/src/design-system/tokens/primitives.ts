@@ -71,4 +71,6 @@ export const elevation = { level0: 0, level1: 1, level2: 3, level3: 6 } as const
 
 export const opacity = { disabled: 0.38, pressedOverlay: 0.12, scrim: 0.4 } as const;
 
-export const sizes = { touchMin: 48, iconSm: 20, iconMd: 24, iconLg: 32 } as const;
+export const borderWidth = { thin: 1, thick: 2 } as const;
+
+export const sizes ={ touchMin: 48, iconSm: 20, iconMd: 24, iconLg: 32 } as const;

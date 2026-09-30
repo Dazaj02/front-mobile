@@ -30,6 +30,7 @@ import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { Newsreader_400Regular, Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
 import { ThemeProvider } from './src/design-system/theme/ThemeProvider';
+import { DevCatalogHost } from './src/design-system/catalog/DevCatalogHost';
 import { semanticTokens } from './src/design-system/tokens';
 import { useLegacyColors } from './src/legacy/useLegacyColors';
 import { useSettingsStore } from './src/state/settingsStore';
@@ -65,7 +66,9 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <LegacyApp />
+      <DevCatalogHost>
+        <LegacyApp />
+      </DevCatalogHost>
     </ThemeProvider>
   );
 }

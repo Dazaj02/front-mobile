@@ -32,8 +32,16 @@ export function createSettingsStore(repo: SettingsRepository) {
       if (safe.readerFontScale !== undefined) {
         safe.readerFontScale = clampReaderFontScale(safe.readerFontScale);
       }
+      const current = get();
+      const previous = Object.fromEntries(
+        Object.keys(safe).map((k) => [k, current[k as keyof UserSettings]]),
+      ) as Partial<UserSettings>;
       set(safe);
-      repo.update(safe).catch((e) => logger.warn('No se pudo guardar el ajuste', e));
+      repo.update(safe).catch((e) => {
+        // Si no se pudo persistir, la UI vuelve al valor anterior para no mentir al usuario.
+        logger.warn('No se pudo guardar el ajuste', e);
+        set(previous);
+      });
     },
 
     setTheme: (theme) => get().update({ theme }),

@@ -1,12 +1,13 @@
 const { defineConfig } = require('eslint/config');
 const expo = require('eslint-config-expo/flat');
 
-// Reglas de dependencia atómica (PLAN_FRONTEND §5.2). En "warn" hasta F3.
+// Reglas de dependencia atómica (PLAN_FRONTEND §5.2).
+// atoms y molecules ya son "error" (F2); el resto pasa a "error" en F3.
 const DEP_LEVEL = 'warn';
 
-const forbid = (...globs) => ({
+const forbid = (level, ...globs) => ({
   'no-restricted-imports': [
-    DEP_LEVEL,
+    level,
     { patterns: [{ group: globs, message: 'Viola la regla de dependencia atómica (§5.2)' }] },
   ],
 });
@@ -18,23 +19,23 @@ module.exports = defineConfig([
   { ignores: ['dist/*', '.expo/*', 'node_modules/*'] },
   {
     files: ['src/design-system/tokens/**'],
-    rules: forbid('**/atoms/**', '**/molecules/**', '**/organisms/**', '**/templates/**', '**/theme/**', '**/layout/**', '**/lib/**', ...outer),
+    rules: forbid('error', '**/atoms/**', '**/molecules/**', '**/organisms/**', '**/templates/**', '**/theme/**', '**/layout/**', '**/lib/**', ...outer),
   },
   {
     files: ['src/design-system/atoms/**'],
-    rules: forbid('**/molecules/**', '**/organisms/**', '**/templates/**', ...outer),
+    rules: forbid('error', '**/molecules/**', '**/organisms/**', '**/templates/**', ...outer),
   },
   {
     files: ['src/design-system/molecules/**'],
-    rules: forbid('**/organisms/**', '**/templates/**', ...outer),
+    rules: forbid('error', '**/organisms/**', '**/templates/**', ...outer),
   },
   {
     files: ['src/design-system/organisms/**'],
-    rules: forbid('**/templates/**', ...outer),
+    rules: forbid(DEP_LEVEL, '**/templates/**', ...outer),
   },
   {
     files: ['src/design-system/templates/**'],
-    rules: forbid(...outer),
+    rules: forbid(DEP_LEVEL, ...outer),
   },
   {
     files: ['src/domain/**'],
