@@ -6,12 +6,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Spinner } from '../../design-system/atoms/Spinner';
 import { ErrorState } from '../../design-system/organisms/ErrorState';
 import { ProviderKeyForm } from '../../design-system/organisms/ProviderKeyForm';
-import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
+import { AppScreen } from '../shared/AppScreen';
 import { getContainer } from '../../data/container';
 import { ByokProviderIdSchema } from '../../domain/contract';
 import type { ByokProviderId } from '../../domain/ports';
 import { errorMessage, es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
+import { useNetworkGate } from '../../services/network';
 import { useSettingsStore } from '../../state/settingsStore';
 
 const asByok = (id: string): ByokProviderId | null => {
@@ -23,6 +24,7 @@ const asByok = (id: string): ByokProviderId | null => {
 // AsyncStorage ni Supabase) y esta pantalla impide capturas y grabaciones.
 export function AIEngineScreen({ navigation }: NativeStackScreenProps<AppStackParamList, 'AIEngine'>) {
   usePreventScreenCapture();
+  const gate = useNetworkGate(); // probar la key requiere internet (solo en live)
   const qc = useQueryClient();
   const provider = useSettingsStore((s) => s.aiProvider);
   const model = useSettingsStore((s) => s.aiModel);
@@ -108,11 +110,11 @@ export function AIEngineScreen({ navigation }: NativeStackScreenProps<AppStackPa
         testing={testing}
         testMessage={message}
         // En modo mock no hay servidor que valide la key.
-        testDisabledReason={getContainer().mode === 'mock' ? es.aiEngine.testServerOnly : undefined}
+        testDisabledReason={getContainer().mode === 'mock' ? es.aiEngine.testServerOnly : gate.blocked ? es.offline.testRequires : undefined}
         usageText={usage.data && usage.data.limit > 0 ? es.aiEngine.usage(usage.data.used, usage.data.limit) : undefined}
       />
     );
   }
 
-  return <ScreenTemplate header={{ title: es.aiEngine.title, onBack: () => navigation.goBack() }}>{body}</ScreenTemplate>;
+  return <AppScreen header={{ title: es.aiEngine.title, onBack: () => navigation.goBack() }}>{body}</AppScreen>;
 }

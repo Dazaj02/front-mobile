@@ -78,10 +78,20 @@ export const es = {
     account: 'Cuenta',
     signedInAs: (email: string) => `Sesión iniciada como ${email}`,
     signOut: 'Cerrar sesión',
+    signOutPendingTitle: 'Hay lecturas sin sincronizar',
+    signOutPendingBody: (n: number) =>
+      `Tienes ${n} ${n === 1 ? 'sesión' : 'sesiones'} de lectura sin enviar al servidor. Si cierras sesión ahora se perderán.`,
+    signOutAnyway: 'Cerrar sesión de todos modos',
     aiEngine: 'Motor de IA',
     aiEngineValue: 'FocusRead (incluido)',
     accountRow: 'Cuenta',
     catalog: 'Catálogo de componentes',
+  },
+  offline: {
+    banner: 'Sin conexión. Puedes leer lo que ya abriste; tu progreso se enviará al reconectar.',
+    importRequires: 'Importar requiere conexión con el servidor.',
+    testRequires: 'Probar la conexión requiere internet.',
+    deleteRequires: 'Eliminar la cuenta requiere internet.',
   },
   aiEngine: {
     title: 'Motor de IA',

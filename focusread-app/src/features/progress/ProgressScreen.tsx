@@ -7,7 +7,7 @@ import { StatTile } from '../../design-system/molecules/StatTile';
 import { DailyProgressCard } from '../../design-system/organisms/DailyProgressCard';
 import { ErrorState } from '../../design-system/organisms/ErrorState';
 import { WeeklyChart } from '../../design-system/organisms/WeeklyChart';
-import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
+import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import type { ReadingStats } from '../../domain/stats';
 import { es } from '../../i18n/es';
@@ -69,5 +69,5 @@ export function ProgressScreen() {
     );
   }
 
-  return <ScreenTemplate header={{ title: es.progress.title }}>{body}</ScreenTemplate>;
+  return <AppScreen header={{ title: es.progress.title }}>{body}</AppScreen>;
 }

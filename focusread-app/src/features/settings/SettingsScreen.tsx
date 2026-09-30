@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, View } from 'react-native';
+import { Alert, Linking, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -15,12 +15,13 @@ import { SettingRow } from '../../design-system/molecules/SettingRow';
 import { SliderField } from '../../design-system/molecules/SliderField';
 import { ThemeSwatch } from '../../design-system/molecules/ThemeSwatch';
 import { VoiceOption } from '../../design-system/molecules/VoiceOption';
-import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
+import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { THEME_MODES } from '../../design-system/tokens';
 import { es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
+import { performSignOut, syncBeforeSignOut } from '../../services/session/signOut';
 import { speak } from '../../services/tts';
 import { useSessionStore } from '../../state/sessionStore';
 import { useSettingsStore } from '../../state/settingsStore';
@@ -39,14 +40,23 @@ export function SettingsScreen() {
   const { spacing, reduceMotion } = useTheme();
   const s = useSettingsStore();
   const email = useSessionStore((st) => st.session?.email);
-  const signOut = useSessionStore((st) => st.signOut);
   const voices = useSpanishVoices();
+
+  // En live se envía lo pendiente antes de salir; si quedan sesiones sin sincronizar se advierte.
+  const requestSignOut = async () => {
+    const { pending } = await syncBeforeSignOut();
+    if (pending === 0) return void performSignOut();
+    Alert.alert(es.settings.signOutPendingTitle, es.settings.signOutPendingBody(pending), [
+      { text: es.common.cancel, style: 'cancel' },
+      { text: es.settings.signOutAnyway, style: 'destructive', onPress: () => void performSignOut() },
+    ]);
+  };
 
   const testVoice = (voiceId: string | null) =>
     speak(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
 
   return (
-    <ScreenTemplate header={{ title: es.settings.title }}>
+    <AppScreen header={{ title: es.settings.title }}>
       {/* Apariencia */}
       <View style={{ gap: spacing.md }}>
         <SectionHeader title={es.settings.appearance} />
@@ -173,7 +183,7 @@ export function SettingsScreen() {
           </AppText>
         ) : null}
         <SettingRow title={es.settings.accountRow} onPress={() => navigation.navigate('Account')} />
-        <Button variant="secondary" label={es.settings.signOut} onPress={signOut} />
+        <Button variant="secondary" label={es.settings.signOut} onPress={() => void requestSignOut()} />
       </View>
 
       {__DEV__ ? (
@@ -182,6 +192,6 @@ export function SettingsScreen() {
           <SettingRow title={es.settings.catalog} onPress={() => navigation.navigate('DevCatalog')} />
         </View>
       ) : null}
-    </ScreenTemplate>
+    </AppScreen>
   );
 }

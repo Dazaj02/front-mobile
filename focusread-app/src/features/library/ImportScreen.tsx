@@ -10,6 +10,7 @@ import type { ByokProviderId } from '../../domain/ports';
 import { errorMessage, es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
+import { useNetworkGate } from '../../services/network';
 import { useSettingsStore } from '../../state/settingsStore';
 import { articleProgressKey, articlesKey } from './useLibraryData';
 
@@ -35,6 +36,7 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
   const close = () => navigation.goBack();
   // Sin servidor (modo mock) solo funciona el proveedor incluido: se avisa antes de intentar.
   const mockNeedsServer = getContainer().mode === 'mock' && provider !== 'focusread';
+  const gate = useNetworkGate(); // importar requiere conexión con el servidor (solo en live)
 
   const submit = async () => {
     setStatus('processing');
@@ -78,7 +80,7 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
         providerLabel={providerLabel}
         status={status}
         errorMessage={error}
-        disabledReason={mockNeedsServer ? es.importSheet.mockNeedsServer : undefined}
+        disabledReason={gate.blocked ? es.offline.importRequires : mockNeedsServer ? es.importSheet.mockNeedsServer : undefined}
         onSubmit={submit}
         completed={degraded}
         completedMessage={es.importSheet.created}

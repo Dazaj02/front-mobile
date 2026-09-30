@@ -155,12 +155,10 @@ describe('Ajustes › Motor de IA y Cuenta', () => {
   });
 
   it('muestra el correo, permite abrir Cuenta y cerrar sesión', async () => {
-    const signOut = jest.fn(async () => {});
-    useSessionStore.setState({ signOut });
     const { navigationRef } = await renderSettings();
     expect(await screen.findByText(es.settings.signedInAs('ana@correo.com'))).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: es.settings.signOut }));
-    expect(signOut).toHaveBeenCalled();
+    await waitFor(() => expect(mockC.auth.signOut).toHaveBeenCalledTimes(1));
     await fireEvent.press(screen.getByRole('button', { name: es.settings.accountRow }));
     await waitFor(() => expect(navigationRef.current?.getCurrentRoute()?.name).toBe('Account'));
   });

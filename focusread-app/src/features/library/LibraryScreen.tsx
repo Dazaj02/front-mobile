@@ -12,12 +12,13 @@ import { ArticleCard } from '../../design-system/organisms/ArticleCard';
 import { ContinueReadingCard } from '../../design-system/organisms/ContinueReadingCard';
 import { EmptyState } from '../../design-system/organisms/EmptyState';
 import { ErrorState } from '../../design-system/organisms/ErrorState';
-import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
+import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { getContainer } from '../../data/container';
 import { es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
+import { useNetworkGate } from '../../services/network';
 import { applyFilter, LIBRARY_FILTERS, nextDoseIndex, pickContinueReading, toLibraryItems, type LibraryFilter } from './libraryFilters';
 import { useArticleProgress, useArticles, useLoadExamples, useToggleBookmark } from './useLibraryData';
 
@@ -31,6 +32,7 @@ export function LibraryScreen() {
   const loadExamples = useLoadExamples();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<LibraryFilter>('all');
+  const gate = useNetworkGate(); // favorito requiere conexión (solo en live)
 
   const items = useMemo(() => toLibraryItems(articles.data ?? [], progress.data ?? []), [articles.data, progress.data]);
   const visible = useMemo(() => applyFilter(items, filter, query), [items, filter, query]);
@@ -90,6 +92,7 @@ export function LibraryScreen() {
                 doseCount={item.article.doseCount}
                 progress={item.progress}
                 bookmarked={item.article.bookmarked}
+                bookmarkDisabled={gate.blocked}
                 onPress={() => openReader(item.article.id, nextDoseIndex(item))}
                 onToggleBookmark={() => {
                   void haptic('selection');
@@ -104,7 +107,7 @@ export function LibraryScreen() {
   }
 
   return (
-    <ScreenTemplate
+    <AppScreen
       header={{
         title: es.library.title,
         // Un solo botón Importar en toda la app.
@@ -126,6 +129,6 @@ export function LibraryScreen() {
         />
       ) : null}
       {body}
-    </ScreenTemplate>
+    </AppScreen>
   );
 }

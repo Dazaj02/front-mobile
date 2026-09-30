@@ -61,6 +61,14 @@
 | D49 | F6 | `clearUserData()` ya existe (SQLite + keys) y lo usa Eliminar cuenta. **Cerrar sesión NO lo usa:** en modo mock no hay servidor, así que borrar al cerrar sesión destruiría el progreso | **Decisión de David para F7** (ver P15) |
 | D50 | F6 | Existe `.env` en `focusread-app/` (creado por David, ignorado por git, `EXPO_PUBLIC_DATA_MODE=mock`, con URL y anon key de Supabase para F8). No se leyeron ni se usan sus valores aún | Informativa |
 
+| D51 | F7 | **P15 resuelto (decisión de David):** en modo mock cerrar sesión CONSERVA los datos. En live: se envía la outbox (`flush` sin backoff); si quedan sesiones pendientes se advierte con una alerta; después se limpian caché SQLite, outbox y keys BYOK | Resuelta |
+| D52 | F7 | Las acciones "requieren conexión" (favorito, importar, probar key, eliminar cuenta) solo se bloquean en **modo live** (`useNetworkGate`). En mock todo es local y funciona sin red; el banner "Sin conexión" sí aparece en ambos modos | Aceptada |
+| D53 | F7 | "Borrar artículo" no tiene UI en el plan; `CachedArticleRepository.remove` ya exige conexión y está probado | Informativa |
+| D54 | F7 | Al no existir aún el remoto (Supabase = F8), `composeOffline()` recibe los adaptadores remotos; en pruebas se usa `FakeRemote` (red caída, fallos temporales y reenvío de duplicados). El contenedor live (`sync`, `settingsSync`) se cablea en F8 | Pendiente F8 |
+| D55 | F7 | El banner "Sin conexión" vive en `features/shared/AppScreen` (que envuelve a `ScreenTemplate`) y no dentro del template, porque la regla §5.2 prohíbe que los templates importen servicios | Aceptada |
+| D56 | F7 | `useSyncTriggers` agenda además un reintento temporizado con el backoff de la outbox (el plan solo pedía disparadores de primer plano, reconexión y dosis completada) | Aceptada |
+| D57 | F7 | Falta la **prueba manual en modo avión** (plan F7): David debe verificarla | Pendiente David |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |
@@ -75,7 +83,7 @@
 | P8 | Ports restantes (Auth, Article, Progress, AIGateway, SecretStore) | ~~F4~~ Resuelto | — |
 | P12 | Confirmar con el agente backend los bordes del chunker (D29) y el mensaje/código de errores | Antes de H1 | **David**: pasar D29 al agente backend |
 | P13 | `DailyProgressCard` sin meta diaria (D19) | ~~F6~~ Resuelto por defecto (D41) | David puede vetar |
-| P15 | Cerrar sesión en modo mock: ¿conservar progreso y artículos (recomendado: sí, en mock no hay otra copia) o borrarlos? En live sí se limpia caché tras `flush` | F7 | **Decisión de David** |
+| P15 | Cerrar sesión en modo mock | ~~F7~~ Resuelto: se conservan los datos (D51) | — |
 | P16 | Verificar en teléfono la pantalla Motor de IA con `usePreventScreenCapture` (Expo Go): debe impedir capturas | F6 (verificación) | **David** |
 | P14 | Verificar en Expo Go que la app arranca con SQLite (los ajustes ahora viven en `focusread.db`) | Ahora | **David** |
 | P9 | Reglas ESLint de dependencia atómica | ~~F3~~ Resuelto: todas en `error` | — |

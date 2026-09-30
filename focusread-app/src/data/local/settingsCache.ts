@@ -30,6 +30,33 @@ export class LocalSettingsRepository implements SettingsRepository {
     return next;
   }
 
+  // Sobrescribe con lo recibido del remoto conservando SU fecha (gana la última escritura).
+  async replace(settings: UserSettings, updatedAt: string): Promise<void> {
+    const valid = UserSettingsSchema.parse(settings);
+    const db = await this.getDb();
+    await db.runAsync(
+      `INSERT INTO settings (id, data, updated_at) VALUES (1, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
+      [JSON.stringify(valid), updatedAt],
+    );
+  }
+
+  // "Sucio" = hay cambios locales aún no subidos al remoto.
+  async markDirty(): Promise<void> {
+    const db = await this.getDb();
+    await db.runAsync("INSERT OR REPLACE INTO meta (key, value) VALUES ('settings_dirty', '1')");
+  }
+
+  async clearDirty(): Promise<void> {
+    const db = await this.getDb();
+    await db.runAsync("DELETE FROM meta WHERE key = 'settings_dirty'");
+  }
+
+  async isDirty(): Promise<boolean> {
+    const db = await this.getDb();
+    return (await db.getFirstAsync("SELECT 1 AS d FROM meta WHERE key = 'settings_dirty'")) !== null;
+  }
+
   private async read(): Promise<{ settings: UserSettings; updatedAt: string | null }> {
     const db = await this.getDb();
     const row = await db.getFirstAsync<{ data: string; updated_at: string }>('SELECT data, updated_at FROM settings WHERE id = 1');

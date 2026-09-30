@@ -39,8 +39,9 @@ describe('políticas del plan', () => {
 
   it('la app nunca inserta artículos, dosis ni quiz directamente (solo la API o el gateway mock)', () => {
     const callers = files(SRC).filter((p) => /\.save\(|\.insert\(/.test(read(p)));
-    // Permitidos: el gateway mock y la siembra de ejemplos del modo mock (useLoadExamples).
-    expect(callers.map(rel).sort()).toEqual(['data/mock/LocalChunkerGateway.ts', 'features/library/useLibraryData.ts']);
+    // Permitidos: el gateway mock, la siembra de ejemplos del modo mock (useLoadExamples) y la
+    // caché local de lo que el servidor devuelve (CachedArticleRepository: no crea artículos, los copia).
+    expect(callers.map(rel).sort()).toEqual(['data/mock/LocalChunkerGateway.ts', 'data/offline/CachedArticleRepository.ts', 'features/library/useLibraryData.ts']);
   });
 
   it('no queda código eliminado: binaurales, karaoke, voces "persona", fatiga ahorrada', () => {

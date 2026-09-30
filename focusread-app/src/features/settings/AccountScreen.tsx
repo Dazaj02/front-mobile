@@ -7,11 +7,12 @@ import { Button } from '../../design-system/atoms/Button';
 import { Banner } from '../../design-system/molecules/Banner';
 import { FormField } from '../../design-system/molecules/FormField';
 import { SectionHeader } from '../../design-system/molecules/SectionHeader';
-import { ScreenTemplate } from '../../design-system/templates/ScreenTemplate';
+import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { getContainer } from '../../data/container';
 import { errorMessage, es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
+import { useNetworkGate } from '../../services/network';
 import { clearUserData } from '../../services/session/clearLocalData';
 import { useSessionStore } from '../../state/sessionStore';
 
@@ -23,7 +24,8 @@ export function AccountScreen({ navigation }: NativeStackScreenProps<AppStackPar
   const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const armed = typed === es.account.deleteWord;
+  const gate = useNetworkGate(); // eliminar la cuenta requiere internet (solo en live)
+  const armed = typed === es.account.deleteWord && !gate.blocked;
 
   const cancel = () => {
     setConfirming(false);
@@ -46,7 +48,7 @@ export function AccountScreen({ navigation }: NativeStackScreenProps<AppStackPar
   };
 
   return (
-    <ScreenTemplate header={{ title: es.account.title, onBack: () => navigation.goBack() }}>
+    <AppScreen header={{ title: es.account.title, onBack: () => navigation.goBack() }}>
       <View style={{ gap: spacing.xs }}>
         <AppText variant="label" color="secondary">
           {es.account.email}
@@ -70,12 +72,13 @@ export function AccountScreen({ navigation }: NativeStackScreenProps<AppStackPar
               autoCapitalize="characters"
               autoCorrect={false}
             />
+            {gate.blocked ? <Banner tone="offline" message={es.offline.deleteRequires} /> : null}
             {error ? <Banner tone="error" message={error} /> : null}
             <Button label={es.account.deleteConfirm} disabled={!armed} loading={busy} onPress={() => void deleteAccount()} />
             <Button variant="ghost" label={es.account.deleteCancel} disabled={busy} onPress={cancel} />
           </View>
         )}
       </View>
-    </ScreenTemplate>
+    </AppScreen>
   );
 }

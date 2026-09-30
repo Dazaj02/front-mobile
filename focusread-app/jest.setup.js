@@ -41,6 +41,27 @@ jest.mock('expo-linking', () => ({
   openURL: jest.fn(() => Promise.resolve(true)),
 }));
 
+// NetInfo controlable desde las pruebas: NetInfo.__set({ isConnected: false }) simula perder la red.
+jest.mock('@react-native-community/netinfo', () => {
+  let state = { isConnected: true, isInternetReachable: true };
+  const listeners = new Set();
+  const NetInfo = {
+    fetch: jest.fn(async () => state),
+    addEventListener: jest.fn((cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    }),
+    __set: (next) => {
+      state = { ...state, ...next };
+      listeners.forEach((cb) => cb(state));
+    },
+    __reset: () => {
+      state = { isConnected: true, isInternetReachable: true };
+    },
+  };
+  return { __esModule: true, default: NetInfo, ...NetInfo };
+});
+
 // Módulos nativos sin implementación en Node
 jest.mock('@react-native-community/slider', () => {
   const React = require('react');

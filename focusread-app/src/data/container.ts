@@ -7,6 +7,8 @@ import type {
   SecretStore,
   SettingsRepository,
 } from '../domain/ports';
+import type { SyncService } from '../services/sync/SyncService';
+import type { SyncedSettingsRepository } from './offline/SyncedSettingsRepository';
 import { getDb } from './local/db';
 import { LocalArticleRepository } from './local/LocalArticleRepository';
 import { LocalProgressRepository } from './local/LocalProgressRepository';
@@ -30,6 +32,9 @@ export interface Container {
   outbox: Outbox;
   // Solo existe en desarrollo y en modo mock: entrar sin formulario. Nunca en release.
   devSignIn?: () => Promise<AuthSession>;
+  // Solo en modo live (F8): sincronización con el servidor. En mock no hay remoto.
+  sync?: SyncService;
+  settingsSync?: SyncedSettingsRepository;
 }
 
 export function readDataMode(value: string | undefined = process.env.EXPO_PUBLIC_DATA_MODE): DataMode {

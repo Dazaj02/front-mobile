@@ -6,6 +6,7 @@ import { ImportScreen } from '../features/library/ImportScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { AccountScreen } from '../features/settings/AccountScreen';
 import { AIEngineScreen } from '../features/settings/AIEngineScreen';
+import { useSyncTriggers } from '../services/sync/useSyncTriggers';
 import { AppTabs } from './AppTabs';
 import type { AppStackParamList } from './types';
 
@@ -13,6 +14,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 // Orden de cierre con el botón atrás: hoja (Import) → lector → pestaña distinta de Biblioteca → salir.
 export function AppStack() {
+  useSyncTriggers(); // envía la outbox al abrir, al volver al primer plano y al recuperar la conexión
   return (
     <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={AppTabs} />
