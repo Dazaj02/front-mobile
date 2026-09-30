@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Linking, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -25,6 +25,7 @@ import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
 import { performSignOut, syncBeforeSignOut } from '../../services/session/signOut';
 import { speakAny } from '../../services/tts';
+import { openSystemVoiceSettings } from '../../services/tts/systemSettings';
 import { useSessionStore } from '../../state/sessionStore';
 import { useSettingsStore } from '../../state/settingsStore';
 import { useCloudVoices, useSpanishVoices } from './useVoices';
@@ -32,9 +33,11 @@ import { useCloudVoices, useSpanishVoices } from './useVoices';
 const DOSE_OPTIONS = [1.5, 2.5, 3.5] as const;
 const formatFactor = (v: number) => `${v.toFixed(1)}×`;
 
-// Abre la pantalla de voz del sistema (Android) para instalar más voces; si no existe, los ajustes de la app.
-function openSystemVoiceSettings() {
-  Linking.sendIntent('android.settings.TTS_SETTINGS').catch(() => Linking.openSettings().catch(() => undefined));
+// Abre la pantalla de voces del sistema; si el teléfono no la ofrece, explica el camino manual.
+async function openVoiceSettings() {
+  if ((await openSystemVoiceSettings()) === 'unavailable') {
+    Alert.alert(es.settings.voiceInstallTitle, es.settings.voiceInstallSteps);
+  }
 }
 
 export function SettingsScreen() {
@@ -171,7 +174,7 @@ export function SettingsScreen() {
           {es.settings.voicesHint}
         </AppText>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          <Button variant="secondary" icon="settings-outline" label={es.settings.voiceSystemSettings} onPress={openSystemVoiceSettings} />
+          <Button variant="secondary" icon="settings-outline" label={es.settings.voiceSystemSettings} onPress={() => void openVoiceSettings()} />
           <Button variant="ghost" icon="refresh" label={es.settings.voiceRefresh} onPress={() => void voices.refetch()} />
         </View>
         <SliderField label={es.settings.voiceRate} value={s.speechRate} min={0.5} max={2} step={0.1} format={formatFactor} onChange={(v) => s.update({ speechRate: v })} />

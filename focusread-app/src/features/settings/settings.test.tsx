@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '../../domain/defaults';
@@ -140,12 +140,35 @@ describe('Ajustes › Voz', () => {
     const send = jest.spyOn(Linking, 'sendIntent').mockResolvedValue();
     await renderSettings();
     await fireEvent.press(await screen.findByRole('button', { name: es.settings.voiceSystemSettings }));
-    expect(send).toHaveBeenCalledWith('android.settings.TTS_SETTINGS');
+    await waitFor(() => expect(send).toHaveBeenCalledWith('android.speech.tts.engine.INSTALL_TTS_DATA'));
 
     (tts.loadSpanishVoices as jest.Mock).mockClear();
     await fireEvent.press(screen.getByRole('button', { name: es.settings.voiceRefresh }));
     await waitFor(() => expect(tts.loadSpanishVoices).toHaveBeenCalledTimes(1));
     send.mockRestore();
+  });
+
+  it('si la instalación directa no existe prueba los ajustes de texto a voz, y nunca abre los ajustes de la app', async () => {
+    const send = jest.spyOn(Linking, 'sendIntent').mockRejectedValueOnce(new Error('no existe')).mockResolvedValueOnce();
+    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    await renderSettings();
+    await fireEvent.press(await screen.findByRole('button', { name: es.settings.voiceSystemSettings }));
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(2));
+    expect(send.mock.calls[1][0]).toBe('com.android.settings.TTS_SETTINGS');
+    expect(openSettings).not.toHaveBeenCalled();
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  it('si ninguna pantalla existe explica el camino manual (sin abrir los ajustes de la app)', async () => {
+    jest.spyOn(Linking, 'sendIntent').mockRejectedValue(new Error('no existe'));
+    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    await renderSettings();
+    await fireEvent.press(await screen.findByRole('button', { name: es.settings.voiceSystemSettings }));
+    await waitFor(() => expect(alert).toHaveBeenCalledWith(es.settings.voiceInstallTitle, es.settings.voiceInstallSteps));
+    expect(es.settings.voiceInstallSteps).toContain('Servicios de voz de Google');
+    expect(openSettings).not.toHaveBeenCalled();
   });
 
   it('"Probar" habla con la voz, velocidad y tono actuales', async () => {

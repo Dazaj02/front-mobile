@@ -73,6 +73,9 @@ export const es = {
     genders: { male: 'Masculina', female: 'Femenina', neutral: 'Neutra' },
     voicesHint: 'Las voces disponibles dependen del motor de voz de tu teléfono. Puedes instalar más en los ajustes del sistema.',
     voiceSystemSettings: 'Abrir ajustes de voz del sistema',
+    voiceInstallTitle: 'Instalar voces de español',
+    voiceInstallSteps:
+      'No pudimos abrir esa pantalla automáticamente. Hazlo a mano:\n\n1. Abre los Ajustes del teléfono (no los de esta app).\n2. Busca "Texto a voz" o "Salida de texto a voz" (suele estar en Sistema › Idioma y entrada, o en Administración general).\n3. Elige el motor "Servicios de voz de Google" y toca el engranaje.\n4. Entra en "Instalar datos de voz", elige Español y descarga las voces.\n5. Vuelve aquí y toca "Actualizar lista de voces".',
     voiceRefresh: 'Actualizar lista de voces',
     accessibility: 'Accesibilidad',
     haptics: 'Vibración',
