@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,10 @@ import {
   Modal,
   TextInput,
   Alert,
+  ScrollView,
+  useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -17,17 +21,21 @@ import { MyDosesScreen } from './src/screens/MyDosesScreen';
 import { ProgressScreen } from './src/screens/ProgressScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ZenReaderScreen } from './src/screens/ZenReaderScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 import { StorageService } from './src/storage/storageService';
 import { DeepSeekService } from './src/services/deepSeekService';
 import { AudioService } from './src/services/audioService';
-import { Article, UserStats, AppSettings } from './src/types';
+import { Article, UserStats, AppSettings, UserProfile } from './src/types';
 import { ThemeMode, themes } from './src/theme/tokens';
 import { DEFAULT_APP_SETTINGS } from './src/data/mockArticles';
 
 type ActiveTab = 'explorar' | 'mi_dosis' | 'progreso' | 'ajustes';
+const TABS: ActiveTab[] = ['explorar', 'mi_dosis', 'progreso', 'ajustes'];
+
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [stats, setStats] = useState<UserStats>({
     currentStreakDays: 7,
@@ -42,6 +50,31 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('explorar');
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const [initialDoseIndex, setInitialDoseIndex] = useState<number>(0);
+
+  // Dimensiones y Ref para Swipe entre Pestañas Principales
+  const { width: windowWidth } = useWindowDimensions();
+  const tabsScrollRef = useRef<ScrollView>(null);
+
+  const handleSwitchTab = (tab: ActiveTab) => {
+    AudioService.triggerHaptic('light');
+    setActiveTab(tab);
+    const index = TABS.indexOf(tab);
+    if (index !== -1 && tabsScrollRef.current) {
+      tabsScrollRef.current.scrollTo({ x: index * windowWidth, animated: true });
+    }
+  };
+
+  const handleTabsScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offsetX / windowWidth);
+    if (newIndex >= 0 && newIndex < TABS.length) {
+      const targetTab = TABS[newIndex];
+      if (targetTab !== activeTab) {
+        AudioService.triggerHaptic('light');
+        setActiveTab(targetTab);
+      }
+    }
+  };
 
   // Modal para Importar URL o Fragmentar con IA
   const [importModalVisible, setImportModalVisible] = useState(false);
@@ -59,9 +92,11 @@ export default function App() {
 
   const loadData = async () => {
     try {
+      const loadedProfile = await StorageService.getUserProfile();
       const loadedArticles = await StorageService.getArticles();
       const loadedStats = await StorageService.getUserStats();
       const loadedSettings = await StorageService.getSettings();
+      setUserProfile(loadedProfile);
       setArticles(loadedArticles);
       setStats(loadedStats);
       setSettings(loadedSettings);
@@ -163,7 +198,7 @@ export default function App() {
         '¡Dosis Lista!',
         `El contenido "${newArticle.title}" fue fragmentado en ${newArticle.microDoses.length} micro-dosis con preguntas socráticas.`
       );
-      setActiveTab('mi_dosis');
+      handleSwitchTab('mi_dosis');
     } catch (e: any) {
       Alert.alert('Error al procesar', e.message || 'Ocurrió un error al procesar el artículo con IA.');
     } finally {
@@ -178,6 +213,16 @@ export default function App() {
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primaryContainer} />
       </View>
+    );
+  }
+
+  // Si no hay sesión iniciada, mostrar LoginScreen acorde a la app
+  if (!userProfile || !userProfile.isLoggedIn) {
+    return (
+      <LoginScreen
+        themeMode={themeMode}
+        onLoginSuccess={profile => setUserProfile(profile)}
+      />
     );
   }
 
@@ -227,16 +272,24 @@ export default function App() {
 
         <TouchableOpacity
           style={[styles.profileHeaderBtn, { backgroundColor: colors.surfaceContainer }]}
-          onPress={() => setActiveTab('ajustes')}
+          onPress={() => handleSwitchTab('ajustes')}
         >
           <Ionicons name="person" size={16} color={colors.text} />
           <View style={[styles.headerDot, { backgroundColor: colors.tertiaryContainer }]} />
         </TouchableOpacity>
       </View>
 
-      {/* Pantalla Activa */}
-      <View style={{ flex: 1 }}>
-        {activeTab === 'explorar' && (
+      {/* Contenedor de Pestañas con Navegación por Swipe Horizontal */}
+      <ScrollView
+        ref={tabsScrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleTabsScrollEnd}
+        scrollEventThrottle={16}
+        style={{ flex: 1 }}
+      >
+        <View style={{ width: windowWidth, flex: 1 }}>
           <HomeScreen
             articles={articles}
             stats={stats}
@@ -244,11 +297,12 @@ export default function App() {
             onSelectArticle={handleSelectArticle}
             onQuickListen={handleQuickListen}
             onOpenImportModal={() => setImportModalVisible(true)}
-            onNavigateToTab={setActiveTab}
+            onNavigateToTab={handleSwitchTab}
             onToggleBookmark={handleToggleBookmark}
           />
-        )}
-        {activeTab === 'mi_dosis' && (
+        </View>
+
+        <View style={{ width: windowWidth, flex: 1 }}>
           <MyDosesScreen
             articles={articles}
             themeMode={themeMode}
@@ -257,19 +311,26 @@ export default function App() {
             onOpenImportModal={() => setImportModalVisible(true)}
             onToggleBookmark={handleToggleBookmark}
           />
-        )}
-        {activeTab === 'progreso' && (
+        </View>
+
+        <View style={{ width: windowWidth, flex: 1 }}>
           <ProgressScreen stats={stats} themeMode={themeMode} />
-        )}
-        {activeTab === 'ajustes' && (
+        </View>
+
+        <View style={{ width: windowWidth, flex: 1 }}>
           <SettingsScreen
             settings={settings}
             themeMode={themeMode}
+            userProfile={userProfile || undefined}
             onChangeTheme={setThemeMode}
             onUpdateSettings={handleUpdateSettings}
+            onLogout={async () => {
+              const loggedOut = await StorageService.logoutUser();
+              setUserProfile(loggedOut);
+            }}
           />
-        )}
-      </View>
+        </View>
+      </ScrollView>
 
       {/* Floating Audio Zen Mini Player Persistente */}
       {floatingAudioArticle && (
@@ -312,10 +373,7 @@ export default function App() {
             styles.bottomNavItem,
             activeTab === 'explorar' && [styles.bottomNavActive, { backgroundColor: colors.secondaryContainer }],
           ]}
-          onPress={() => {
-            AudioService.triggerHaptic('light');
-            setActiveTab('explorar');
-          }}
+          onPress={() => handleSwitchTab('explorar')}
         >
           <Ionicons
             name={activeTab === 'explorar' ? 'compass' : 'compass-outline'}
@@ -340,10 +398,7 @@ export default function App() {
             styles.bottomNavItem,
             activeTab === 'mi_dosis' && [styles.bottomNavActive, { backgroundColor: colors.secondaryContainer }],
           ]}
-          onPress={() => {
-            AudioService.triggerHaptic('light');
-            setActiveTab('mi_dosis');
-          }}
+          onPress={() => handleSwitchTab('mi_dosis')}
         >
           <Ionicons
             name={activeTab === 'mi_dosis' ? 'book' : 'book-outline'}
@@ -368,10 +423,7 @@ export default function App() {
             styles.bottomNavItem,
             activeTab === 'progreso' && [styles.bottomNavActive, { backgroundColor: colors.secondaryContainer }],
           ]}
-          onPress={() => {
-            AudioService.triggerHaptic('light');
-            setActiveTab('progreso');
-          }}
+          onPress={() => handleSwitchTab('progreso')}
         >
           <Ionicons
             name={activeTab === 'progreso' ? 'flame' : 'flame-outline'}
@@ -396,10 +448,7 @@ export default function App() {
             styles.bottomNavItem,
             activeTab === 'ajustes' && [styles.bottomNavActive, { backgroundColor: colors.secondaryContainer }],
           ]}
-          onPress={() => {
-            AudioService.triggerHaptic('light');
-            setActiveTab('ajustes');
-          }}
+          onPress={() => handleSwitchTab('ajustes')}
         >
           <Ionicons
             name={activeTab === 'ajustes' ? 'settings' : 'settings-outline'}
@@ -455,6 +504,91 @@ export default function App() {
               multiline
               autoCapitalize="none"
             />
+
+            {/* Selector de Enlaces de Prueba Rápida */}
+            <View style={styles.quickTestSection}>
+              <View style={styles.quickTestHeader}>
+                <Ionicons name="flask-outline" size={13} color={colors.primaryContainer} />
+                <Text style={[styles.quickTestLabel, { color: colors.primaryContainer }]}>
+                  PROBAR CON DIFERENTES ENLACES (1-TAP):
+                </Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.quickTestScroll}
+              >
+                <TouchableOpacity
+                  style={[styles.testLinkChip, { backgroundColor: colors.surfaceContainerHigh, borderColor: colors.border }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('light');
+                    setImportInput('https://www.tiktok.com/@neurociencia.focus/video/73918237');
+                  }}
+                >
+                  <Text style={styles.testChipIcon}>🎵</Text>
+                  <View>
+                    <Text style={[styles.testChipTitle, { color: colors.text }]}>TikTok</Text>
+                    <Text style={[styles.testChipDesc, { color: colors.textSecondary }]}>Dopamina & Redes</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.testLinkChip, { backgroundColor: colors.surfaceContainerHigh, borderColor: colors.border }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('light');
+                    setImportInput('https://youtube.com/watch?v=k3G_y3u1aQ');
+                  }}
+                >
+                  <Text style={styles.testChipIcon}>▶️</Text>
+                  <View>
+                    <Text style={[styles.testChipTitle, { color: colors.text }]}>YouTube</Text>
+                    <Text style={[styles.testChipDesc, { color: colors.textSecondary }]}>Deep Work</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.testLinkChip, { backgroundColor: colors.surfaceContainerHigh, borderColor: colors.border }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('light');
+                    setImportInput('https://towardsdatascience.com/cognitive-ai-agents');
+                  }}
+                >
+                  <Text style={styles.testChipIcon}>📝</Text>
+                  <View>
+                    <Text style={[styles.testChipTitle, { color: colors.text }]}>Medium</Text>
+                    <Text style={[styles.testChipDesc, { color: colors.textSecondary }]}>Agentes IA</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.testLinkChip, { backgroundColor: colors.surfaceContainerHigh, borderColor: colors.border }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('light');
+                    setImportInput('https://es.wikipedia.org/wiki/Neuroplasticidad');
+                  }}
+                >
+                  <Text style={styles.testChipIcon}>🧠</Text>
+                  <View>
+                    <Text style={[styles.testChipTitle, { color: colors.text }]}>Wikipedia</Text>
+                    <Text style={[styles.testChipDesc, { color: colors.textSecondary }]}>Neuroplasticidad</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.testLinkChip, { backgroundColor: colors.surfaceContainerHigh, borderColor: colors.border }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('light');
+                    setImportInput('https://techcrunch.com/2026/future-of-attention');
+                  }}
+                >
+                  <Text style={styles.testChipIcon}>📰</Text>
+                  <View>
+                    <Text style={[styles.testChipTitle, { color: colors.text }]}>Tech Blog</Text>
+                    <Text style={[styles.testChipDesc, { color: colors.textSecondary }]}>Futuro Atención</Text>
+                  </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
 
             <View style={styles.modalActionsRow}>
               <TouchableOpacity
@@ -583,4 +717,44 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   confirmBtnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  quickTestSection: {
+    gap: 8,
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  quickTestHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  quickTestLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  quickTestScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 2,
+  },
+  testLinkChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  testChipIcon: {
+    fontSize: 16,
+  },
+  testChipTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  testChipDesc: {
+    fontSize: 9,
+    marginTop: 1,
+  },
 });

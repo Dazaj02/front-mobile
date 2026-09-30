@@ -10,22 +10,26 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppSettings, VoiceSpeakerId } from '../types';
+import { AppSettings, VoiceSpeakerId, UserProfile } from '../types';
 import { ThemeColors, ThemeMode, themes } from '../theme/tokens';
 import { AudioService, SystemVoiceInfo } from '../services/audioService';
 
 interface SettingsScreenProps {
   settings: AppSettings;
   themeMode: ThemeMode;
+  userProfile?: UserProfile;
   onChangeTheme: (mode: ThemeMode) => void;
   onUpdateSettings: (newSettings: AppSettings) => void;
+  onLogout?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   settings,
   themeMode,
+  userProfile,
   onChangeTheme,
   onUpdateSettings,
+  onLogout,
 }) => {
   const colors: ThemeColors = themes[themeMode];
   const [apiKeyInput, setApiKeyInput] = useState(settings.deepSeekApiKey || '');
@@ -104,17 +108,44 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
           <View style={styles.profileTextCol}>
             <View style={styles.nameRow}>
-              <Text style={[styles.profileName, { color: colors.text }]}>Alex Rivera</Text>
+              <Text style={[styles.profileName, { color: colors.text }]}>
+                {userProfile?.name || 'Alex Rivera'}
+              </Text>
               <Ionicons name="checkmark-circle" size={16} color={colors.primaryContainer} />
             </View>
             <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
-              alex.rivera@focusread.ai
+              {userProfile?.email || 'alex.rivera@focusread.ai'}
             </Text>
-            <View style={[styles.planBadge, { backgroundColor: colors.secondaryContainer }]}>
-              <Ionicons name="diamond-outline" size={12} color={colors.onSecondaryContainer} />
-              <Text style={[styles.planBadgeText, { color: colors.onSecondaryContainer }]}>
-                FocusRead Pro
-              </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <View style={[styles.planBadge, { backgroundColor: colors.secondaryContainer }]}>
+                <Ionicons name="diamond-outline" size={12} color={colors.onSecondaryContainer} />
+                <Text style={[styles.planBadgeText, { color: colors.onSecondaryContainer }]}>
+                  {userProfile?.plan === 'pro' ? 'FocusRead Pro' : 'Plan Estudiante'}
+                </Text>
+              </View>
+              {onLogout && (
+                <TouchableOpacity
+                  style={[styles.logoutPill, { backgroundColor: colors.surfaceContainerHigh }]}
+                  onPress={() => {
+                    AudioService.triggerHaptic('medium');
+                    Alert.alert(
+                      'Cerrar Sesión',
+                      '¿Deseas cerrar tu sesión actual y volver a la pantalla de bienvenida?',
+                      [
+                        { text: 'Cancelar', style: 'cancel' },
+                        {
+                          text: 'Cerrar Sesión',
+                          style: 'destructive',
+                          onPress: onLogout,
+                        },
+                      ]
+                    );
+                  }}
+                >
+                  <Ionicons name="log-out-outline" size={12} color="#DC2626" />
+                  <Text style={[styles.logoutPillText, { color: '#DC2626' }]}>Salir</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -475,6 +506,8 @@ const styles = StyleSheet.create({
   profileEmail: { fontSize: 12 },
   planBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, alignSelf: 'flex-start', marginTop: 4, gap: 4 },
   planBadgeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  logoutPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginTop: 4, gap: 3 },
+  logoutPillText: { fontSize: 10, fontWeight: '700' },
   creditsBox: { padding: 12, borderRadius: 10, gap: 6 },
   creditsTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   creditsLabelLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },

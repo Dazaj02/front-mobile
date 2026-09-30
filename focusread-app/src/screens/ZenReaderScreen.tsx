@@ -8,6 +8,10 @@ import {
   SafeAreaView,
   StatusBar,
   Modal,
+  FlatList,
+  useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Article, MicroDose } from '../types';
@@ -37,6 +41,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
   onBack,
   onCompleteDose,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
   const colors: ThemeColors = themes[themeMode];
   const [activeDoseIdx, setActiveDoseIdx] = useState(currentDoseIndex);
   const [fontSize, setFontSize] = useState<number>(18);
@@ -48,12 +53,14 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  const dose: MicroDose = article.microDoses[activeDoseIdx] || article.microDoses[0];
-  const totalDoses = article.microDoses.length;
+  const flatListRef = useRef<FlatList<MicroDose>>(null);
   const timerRef = useRef<any>(null);
 
+  const totalDoses = article.microDoses.length;
+  const currentDose: MicroDose = article.microDoses[activeDoseIdx] || article.microDoses[0];
+
   useEffect(() => {
-    setRemainingSeconds(dose.estimatedSeconds);
+    setRemainingSeconds(currentDose.estimatedSeconds);
     setIsPlayingAudio(false);
     AudioService.stop();
 
@@ -66,7 +73,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
       if (timerRef.current) clearInterval(timerRef.current);
       AudioService.stop();
     };
-  }, [dose]);
+  }, [activeDoseIdx, currentDose]);
 
   const toggleAudio = () => {
     if (isPlayingAudio) {
@@ -74,7 +81,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
       setIsPlayingAudio(false);
     } else {
       setIsPlayingAudio(true);
-      AudioService.speak(dose.contentChunk, {
+      AudioService.speak(currentDose.contentChunk, {
         rate: speechRate,
         speaker: voiceSpeaker,
         voiceIdentifier: selectedVoiceIdentifier,
@@ -89,7 +96,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
     AudioService.stop();
     setIsPlayingAudio(false);
 
-    if (dose.quiz) {
+    if (currentDose.quiz) {
       setSelectedQuizOption(null);
       setQuizSubmitted(false);
       setQuizModalVisible(true);
@@ -99,11 +106,28 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
   };
 
   const finalizeDoseCompletion = () => {
-    onCompleteDose(article.id, dose.id);
+    onCompleteDose(article.id, currentDose.id);
     if (activeDoseIdx < totalDoses - 1) {
-      setActiveDoseIdx(activeDoseIdx + 1);
+      scrollToDose(activeDoseIdx + 1);
     } else {
       onBack();
+    }
+  };
+
+  const scrollToDose = (index: number) => {
+    if (index >= 0 && index < totalDoses) {
+      AudioService.triggerHaptic('light');
+      setActiveDoseIdx(index);
+      flatListRef.current?.scrollToIndex({ index, animated: true });
+    }
+  };
+
+  const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offsetX / windowWidth);
+    if (newIndex >= 0 && newIndex < totalDoses && newIndex !== activeDoseIdx) {
+      AudioService.triggerHaptic('light');
+      setActiveDoseIdx(newIndex);
     }
   };
 
@@ -127,22 +151,28 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
           <Text style={[styles.backText, { color: colors.text }]}>Atrás</Text>
         </TouchableOpacity>
 
+        {/* Stepper / Dots interactivos */}
         <View style={styles.doseIndicatorCol}>
           <Text style={[styles.doseIndicatorText, { color: colors.primaryContainer }]}>
-            DOSIS {activeDoseIdx + 1} DE {totalDoses}
+            DOSIS {activeDoseIdx + 1} DE {totalDoses} · SWIPE DISPONIBLE
           </Text>
           <View style={styles.stepperMiniRow}>
             {article.microDoses.map((_, i) => (
-              <View
+              <TouchableOpacity
                 key={i}
-                style={[
-                  styles.miniDot,
-                  {
-                    backgroundColor: i === activeDoseIdx ? colors.primaryContainer : colors.surfaceContainerHighest,
-                    width: i === activeDoseIdx ? 16 : 6,
-                  },
-                ]}
-              />
+                onPress={() => scrollToDose(i)}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
+                <View
+                  style={[
+                    styles.miniDot,
+                    {
+                      backgroundColor: i === activeDoseIdx ? colors.primaryContainer : colors.surfaceContainerHighest,
+                      width: i === activeDoseIdx ? 18 : 6,
+                    },
+                  ]}
+                />
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -157,50 +187,120 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
         </View>
       </View>
 
-      {/* Cuerpo de Lectura Inmersiva */}
-      <ScrollView
-        style={styles.contentScroll}
-        contentContainerStyle={styles.contentPadding}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.doseTitleHeading, { color: colors.text }]}>{dose.title}</Text>
-        <Text style={[styles.articleOrigin, { color: colors.textSecondary }]}>
-          De: {article.title} · {article.author}
-        </Text>
+      {/* Swipeable Micro-Doses Horizontal FlatList */}
+      <FlatList
+        ref={flatListRef}
+        data={article.microDoses}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={currentDoseIndex < totalDoses ? currentDoseIndex : 0}
+        getItemLayout={(_, index) => ({
+          length: windowWidth,
+          offset: windowWidth * index,
+          index,
+        })}
+        onMomentumScrollEnd={handleScrollEnd}
+        keyExtractor={item => item.id}
+        renderItem={({ item, index }) => (
+          <View style={{ width: windowWidth, flex: 1 }}>
+            <ScrollView
+              style={styles.contentScroll}
+              contentContainerStyle={styles.contentPadding}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Badge Superior de Dosis */}
+              <View style={styles.doseMetaRow}>
+                <View style={[styles.doseBadge, { backgroundColor: colors.secondaryContainer }]}>
+                  <Ionicons name="sparkles" size={12} color={colors.onSecondaryContainer} />
+                  <Text style={[styles.doseBadgeText, { color: colors.onSecondaryContainer }]}>
+                    Dosis {index + 1} de {totalDoses}
+                  </Text>
+                </View>
+                <Text style={[styles.doseTimeEstimate, { color: colors.textSecondary }]}>
+                  ~{Math.max(1, Math.round(item.estimatedSeconds / 60))} min de asimilación
+                </Text>
+              </View>
 
-        <View style={[styles.zenQuoteBox, { backgroundColor: colors.secondaryContainer, borderLeftColor: colors.primaryContainer }]}>
-          <Text style={[styles.zenQuoteText, { color: colors.onSecondaryContainer }]}>
-            "Tu mente es un santuario. Elimina la sobrecarga y absorbe la idea esencial."
-          </Text>
-        </View>
+              <Text style={[styles.doseTitleHeading, { color: colors.text }]}>
+                {item.title}
+              </Text>
+              <Text style={[styles.articleOrigin, { color: colors.textSecondary }]}>
+                De: {article.title} · {article.author}
+              </Text>
 
-        <Text
-          style={[
-            styles.doseParagraphs,
-            {
-              color: colors.text,
-              fontSize: fontSize,
-              lineHeight: fontSize * 1.6,
-            },
-          ]}
-        >
-          {dose.contentChunk}
-        </Text>
+              <View style={[styles.zenQuoteBox, { backgroundColor: colors.secondaryContainer, borderLeftColor: colors.primaryContainer }]}>
+                <Text style={[styles.zenQuoteText, { color: colors.onSecondaryContainer }]}>
+                  "Tu mente es un santuario. Elimina la sobrecarga y absorbe la idea esencial."
+                </Text>
+              </View>
 
-        {/* Botón de Finalizar Dosis */}
-        <View style={styles.finishBtnContainer}>
-          <TouchableOpacity
-            style={[styles.finishBtn, { backgroundColor: colors.primaryContainer }]}
-            onPress={handleFinishDose}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-            <Text style={styles.finishBtnText}>
-              {activeDoseIdx === totalDoses - 1 ? 'Completar Artículo' : 'Completar Dosis y Continuar'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+              <Text
+                style={[
+                  styles.doseParagraphs,
+                  {
+                    color: colors.text,
+                    fontSize: fontSize,
+                    lineHeight: fontSize * 1.6,
+                  },
+                ]}
+              >
+                {item.contentChunk}
+              </Text>
+
+              {/* Guía de Navegación por Swipe */}
+              <View style={[styles.swipeHelperBox, { backgroundColor: colors.surfaceContainerLow, borderColor: colors.border }]}>
+                <View style={styles.swipeHelperRow}>
+                  {index > 0 ? (
+                    <TouchableOpacity
+                      style={[styles.swipeNavBtn, { backgroundColor: colors.surfaceContainerHigh }]}
+                      onPress={() => scrollToDose(index - 1)}
+                    >
+                      <Ionicons name="arrow-back" size={14} color={colors.text} />
+                      <Text style={[styles.swipeNavBtnText, { color: colors.text }]}>Anterior</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ width: 80 }} />
+                  )}
+
+                  <View style={styles.swipeCues}>
+                    <Ionicons name="swap-horizontal" size={16} color={colors.primaryContainer} />
+                    <Text style={[styles.swipeCuesText, { color: colors.textSecondary }]}>
+                      Desliza para cambiar
+                    </Text>
+                  </View>
+
+                  {index < totalDoses - 1 ? (
+                    <TouchableOpacity
+                      style={[styles.swipeNavBtn, { backgroundColor: colors.surfaceContainerHigh }]}
+                      onPress={() => scrollToDose(index + 1)}
+                    >
+                      <Text style={[styles.swipeNavBtnText, { color: colors.text }]}>Siguiente</Text>
+                      <Ionicons name="arrow-forward" size={14} color={colors.text} />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ width: 80 }} />
+                  )}
+                </View>
+              </View>
+
+              {/* Botón de Finalizar / Completar Dosis */}
+              <View style={styles.finishBtnContainer}>
+                <TouchableOpacity
+                  style={[styles.finishBtn, { backgroundColor: colors.primaryContainer }]}
+                  onPress={handleFinishDose}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.finishBtnText}>
+                    {index === totalDoses - 1 ? 'Completar Artículo' : 'Completar Dosis y Continuar'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        )}
+      />
 
       {/* Dock Flotante de Audio Zen */}
       <View style={[styles.dockContainer, { backgroundColor: colors.dockBackground, borderTopColor: colors.border }]}>
@@ -215,10 +315,10 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.dockTitle, { color: colors.text }]} numberOfLines={1}>
-                {dose.title}
+                {currentDose.title}
               </Text>
               <Text style={[styles.dockTimer, { color: colors.textSecondary }]}>
-                {formatTimer(remainingSeconds)} · {speechRate}x Voz Neural
+                {formatTimer(remainingSeconds)} · {speechRate}x Voz Neural ({voiceSpeaker})
               </Text>
             </View>
           </View>
@@ -238,7 +338,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
       </View>
 
       {/* Modal Quiz Socrático de Retención Activa */}
-      {dose.quiz && (
+      {currentDose.quiz && (
         <Modal
           visible={quizModalVisible}
           transparent
@@ -253,13 +353,13 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
               </View>
 
               <Text style={[styles.quizQuestion, { color: colors.text }]}>
-                {dose.quiz.question}
+                {currentDose.quiz.question}
               </Text>
 
               <View style={styles.quizOptionsGroup}>
-                {dose.quiz.options.map((opt, idx) => {
+                {currentDose.quiz.options.map((opt, idx) => {
                   const isSelected = selectedQuizOption === idx;
-                  const isCorrect = idx === dose.quiz?.correctIndex;
+                  const isCorrect = idx === currentDose.quiz?.correctIndex;
                   return (
                     <TouchableOpacity
                       key={idx}
@@ -298,7 +398,7 @@ export const ZenReaderScreen: React.FC<ZenReaderScreenProps> = ({
 
               {quizSubmitted && (
                 <Text style={[styles.quizExplanation, { color: colors.textSecondary }]}>
-                  💡 {dose.quiz.explanation}
+                  💡 {currentDose.quiz.explanation}
                 </Text>
               )}
 
@@ -354,17 +454,71 @@ const styles = StyleSheet.create({
   doseIndicatorCol: { alignItems: 'center', gap: 4 },
   doseIndicatorText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
   stepperMiniRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
-  miniDot: { height: 4, borderRadius: 2 },
+  miniDot: { height: 5, borderRadius: 2.5 },
   headerRightActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   headerIconBtn: { padding: 6 },
   contentScroll: { flex: 1 },
-  contentPadding: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 110 },
+  contentPadding: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120 },
+  doseMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  doseBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  doseBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  doseTimeEstimate: {
+    fontSize: 11,
+  },
   doseTitleHeading: { fontSize: 24, fontWeight: '700', lineHeight: 32, marginBottom: 4 },
   articleOrigin: { fontSize: 12, marginBottom: 16 },
   zenQuoteBox: { padding: 12, borderRadius: 10, borderLeftWidth: 4, marginBottom: 20 },
   zenQuoteText: { fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
   doseParagraphs: { textAlign: 'justify', letterSpacing: 0.2 },
-  finishBtnContainer: { marginTop: 32, alignItems: 'center' },
+  swipeHelperBox: {
+    marginTop: 24,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  swipeHelperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  swipeNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  swipeNavBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  swipeCues: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeCuesText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  finishBtnContainer: { marginTop: 24, alignItems: 'center' },
   finishBtn: {
     flexDirection: 'row',
     alignItems: 'center',
