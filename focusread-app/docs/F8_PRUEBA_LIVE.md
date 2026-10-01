@@ -3,10 +3,13 @@
 El código de F8 está hecho y probado con pruebas automáticas (Supabase y backend simulados). Lo que falta
 es la **verificación manual de extremo a extremo**, que necesita tu backend, tu proyecto Supabase y tu teléfono.
 
-## 1. Backend en modo live (agente backend, repo `back-mobile`)
-En `back-mobile/.env` (ya existe, ignorado por git): `DATA_MODE=live`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-y `DEEPSEEK_API_KEY`. Luego `npm run dev` (puerto 8787). Comprueba `http://localhost:8787/health`.
-Opción: desplegarlo en Render siguiendo `back-mobile/DEPLOY.md` y usar esa URL HTTPS.
+## 1. Backend
+**Ya está desplegado y verificado en producción (según el agente backend): `https://focusread-api.onrender.com`**
+(HTTPS forzado). Úsalo como `EXPO_PUBLIC_API_URL` y no necesitas correr nada en tu PC.
+Notas: Render gratis duerme tras 15 min sin tráfico y tarda ≈1 min en despertar (la app llama a `/health` al
+abrir; el primer procesamiento puede tardar más). Límites: 10 solicitudes/min por usuario (`RATE_LIMITED`) y
+10 artículos/día con la key del servidor (`QUOTA_EXCEEDED`); con tu propia key (BYOK) no consume cuota.
+Alternativa local: en `back-mobile/.env` `DATA_MODE=live` y `npm run dev` (puerto 8787).
 
 ## 2. Panel de Supabase (Authentication → URL Configuration)
 Agrega en **Redirect URLs** (los enlaces del correo solo funcionan si están en la lista):
@@ -19,7 +22,7 @@ bajo de envíos por hora; si falla un registro, espera o configura un SMTP propi
 ## 3. `.env` del frontend (`focusread-app/.env`, ignorado por git)
 ```
 EXPO_PUBLIC_DATA_MODE=live
-EXPO_PUBLIC_API_URL=http://<IP-LAN-de-tu-PC>:8787     # dispositivo físico (Expo Go). Emulador: http://10.0.2.2:8787
+EXPO_PUBLIC_API_URL=https://focusread-api.onrender.com   # producción (recomendado). Local: http://<IP-LAN-de-tu-PC>:8787 · emulador: http://10.0.2.2:8787
 EXPO_PUBLIC_SUPABASE_URL=https://<proyecto>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>               # pública por diseño; NUNCA la service_role
 # EXPO_PUBLIC_CLOUD_TTS=1                              # solo cuando el backend tenga /v1/tts
