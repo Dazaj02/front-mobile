@@ -81,6 +81,36 @@ describe('chunkText', () => {
     }
   });
 
+  // Casos del backend (back-mobile/test/unit/chunker.test.ts), objetivo 1.5 min = 270 palabras:
+  // 1.3× = 351, 1.5× = 405. Ambos chunkers deben producir los mismos cortes.
+  describe('alineado con el chunker del backend (objetivo 1.5 min)', () => {
+    const cut = (...paragraphs: number[]) => wordsOf(chunkText(textOf(...paragraphs), 1.5));
+
+    it('un párrafo de 1.3×–1.5× es una unidad atómica: queda solo en su dosis', () => {
+      expect(cut(380)).toEqual([380]);
+      expect(cut(200, 380)).toEqual([200, 380]);
+      expect(cut(405)).toEqual([405]);
+    });
+
+    it('la fusión final del último fragmento (< 0.4×) puede superar 1.3×', () => {
+      expect(cut(100, 380, 100)).toEqual([100, 480]);
+      expect(cut(380, 100)).toEqual([480]);
+      expect(cut(100, 100, 100, 100)).toEqual([400]);
+    });
+
+    it('un párrafo de más de 1.5× se parte por oraciones', () => {
+      const oneParagraph = Array.from({ length: 9 }, () => sentence(48)).join(' '); // 432 palabras (1.6×)
+      const chunks = wordsOf(chunkText(oneParagraph, 1.5));
+      expect(chunks.length).toBeGreaterThan(1);
+      expect(chunks.reduce((a, b) => a + b, 0)).toBe(432);
+    });
+
+    it('estMinutes = max(0.1, round(palabras/180, 1))', () => {
+      expect(estimateMinutes(380)).toBe(2.1);
+      expect(estimateMinutes(1)).toBe(0.1);
+    });
+  });
+
   it('no pierde ni inventa palabras', () => {
     const input = textOf(130, 220, 90, 310, 75, 400);
     const chunks = chunkText(input, 2.5);
