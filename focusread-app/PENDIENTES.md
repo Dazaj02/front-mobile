@@ -84,6 +84,13 @@
 | D69 | F8 | Del backend (`NOTAS_BACKEND.md`): **C1** (warning `CONTENT_TRUNCATED` para artículos largos por URL) es un cambio de contrato pendiente de decisión de David; **P13** (la service_role se pegó una vez en un archivo versionado de `back-mobile`, no llegó al historial): se recomienda rotarla | **Decisión/acción de David** |
 | D70 | F8 | **TTS en la nube, respuesta del backend:** viable con Azure Neural (nomenclatura `es-MX-JorgeNeural`, género nativo, SSML, MP3). Requiere decidir proveedor y presupuesto (free tier F0: 0,5 M caracteres/mes ≈ 160 dosis/mes en total: poco para varios usuarios), una cuota por caracteres en la base de datos (`consume_tts_quota`, pedir al agente de BD) y un límite propio para `/v1/tts` (el actual de 10/min se queda corto con prefetch). Mientras no se apruebe, el frontend usa la voz del sistema | **Decisión de David** |
 
+| D71 | F9 | **Hallazgo al exportar el bundle de producción:** el código del catálogo DEV estaba dentro del bundle de release (el `import` estático lo arrastraba aunque la ruta estuviera bajo `__DEV__`). Corregido con un `require` condicional (`DevCatalogRoute`); verificado: sus textos ya no aparecen en el `.hbc` | Resuelta |
+| D72 | F9 | Permisos bloqueados vía `blockedPermissions`; `expo-audio` configurado sin micrófono ni segundo plano. Se conserva `ACCESS_WIFI_STATE` porque NetInfo lo declara y su código consulta el wifi (riesgo de excepción si faltara). `MODIFY_AUDIO_SETTINGS` bloqueado: si el audio fallara en el APK es el primer sospechoso | Verificar con el APK |
+| D73 | F9 | `app.json` se completó sin ejecutar `expo prebuild` (falla en este entorno: no encuentra `MainApplication`); la verificación definitiva del manifiesto es sobre el APK real con `scripts/apk-check.cjs` (nuevo, sin probar aún con un APK) | Pendiente APK |
+| D74 | F9 | `.env.example` tenía una clave `sb_publishable_…` en el campo de la URL y luego una URL real de Supabase (cambios hechos fuera de mis commits; la clave ya estaba en el historial de GitHub). Se restauró a plantilla vacía y hay un test que lo vigila. Las claves publishable/anon son públicas por diseño, pero conviene no versionarlas | **David: confirmar; opcional rotar la publishable key** |
+| D75 | F9 | `eas.json` define `development`/`preview`/`production`; la URL y anon key de Supabase NO van en git: se suben a EAS con `scripts/eas-set-env.ps1`. API en HTTPS (`https://focusread-api.onrender.com`) | Hecho |
+| D76 | F9 | El APK `preview` y el smoke test requieren tu cuenta de EAS y tu teléfono (guía `docs/F9_APK.md`). Nombre "FocusRead" provisional; íconos aún los de plantilla de Expo | **Pendiente David** |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |

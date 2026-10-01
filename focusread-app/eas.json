@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "live",
+        "EXPO_PUBLIC_API_URL": "https://focusread-api.onrender.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "live",
+        "EXPO_PUBLIC_API_URL": "https://focusread-api.onrender.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "live",
+        "EXPO_PUBLIC_API_URL": "https://focusread-api.onrender.com"
+      }
+    }
+  }
+}

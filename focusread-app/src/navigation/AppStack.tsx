@@ -1,7 +1,6 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { DevCatalogScreen } from '../design-system/catalog/DevCatalogScreen';
 import { ImportScreen } from '../features/library/ImportScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { AccountScreen } from '../features/settings/AccountScreen';
@@ -11,6 +10,14 @@ import { AppTabs } from './AppTabs';
 import type { AppStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
+
+// Catálogo de componentes: SOLO en desarrollo. El `require` bajo `__DEV__` hace que Metro lo
+// elimine del bundle de producción (verificado exportando el bundle y buscando sus textos).
+/* eslint-disable @typescript-eslint/no-require-imports */
+const DevCatalogRoute: React.ComponentType<NativeStackScreenProps<AppStackParamList, 'DevCatalog'>> | null = __DEV__
+  ? require('./DevCatalogRoute').DevCatalogRoute
+  : null;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 // Orden de cierre con el botón atrás: hoja (Import) → lector → pestaña distinta de Biblioteca → salir.
 export function AppStack() {
@@ -26,9 +33,7 @@ export function AppStack() {
       />
       <Stack.Screen name="AIEngine" component={AIEngineScreen} />
       <Stack.Screen name="Account" component={AccountScreen} />
-      {__DEV__ ? (
-        <Stack.Screen name="DevCatalog">{({ navigation }) => <DevCatalogScreen onClose={() => navigation.goBack()} />}</Stack.Screen>
-      ) : null}
+      {DevCatalogRoute ? <Stack.Screen name="DevCatalog" component={DevCatalogRoute} /> : null}
     </Stack.Navigator>
   );
 }
