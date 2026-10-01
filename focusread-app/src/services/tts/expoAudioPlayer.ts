@@ -1,11 +1,12 @@
-import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
-import { File, Paths } from 'expo-file-system';
+import type { AudioPlayer } from 'expo-audio';
+import type { File } from 'expo-file-system';
 
 import { logger } from '../../lib/logger';
 import type { AudioPlayerPort } from './cloud';
 
 // Reproductor real: escribe el audio en la caché del dispositivo y lo reproduce con expo-audio.
-// Se borra el archivo al terminar o al detenerse.
+// Se borra el archivo al terminar o al detenerse. Los módulos nativos se cargan al usarlos
+// (require diferido) para no cargarlos en modo mock ni en las pruebas.
 export class ExpoAudioPlayer implements AudioPlayerPort {
   private player: AudioPlayer | null = null;
   private file: File | null = null;
@@ -14,9 +15,13 @@ export class ExpoAudioPlayer implements AudioPlayerPort {
 
   play(bytes: Uint8Array): Promise<void> {
     this.stop();
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const { createAudioPlayer } = require('expo-audio') as typeof import('expo-audio');
+    const { File: FsFile, Paths } = require('expo-file-system') as typeof import('expo-file-system');
+    /* eslint-enable @typescript-eslint/no-require-imports */
     return new Promise<void>((resolve, reject) => {
       try {
-        const file = new File(Paths.cache, `focusread-tts-${Date.now()}-${this.counter++}.mp3`);
+        const file = new FsFile(Paths.cache, `focusread-tts-${Date.now()}-${this.counter++}.mp3`);
         file.create({ overwrite: true });
         file.write(bytes);
         const player = createAudioPlayer(file.uri);

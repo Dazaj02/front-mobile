@@ -84,13 +84,17 @@ function ReaderBody({ article, initialIndex, onExit }: { article: ArticleWithDos
   });
 
   const save = async (d: typeof dose, t: typeof time, done: boolean, quizCorrect: boolean | null) => {
+    const endedAt = new Date(Date.now()); // misma fuente de reloj que ActiveTimer y startedAt
+    // La base exige active_seconds ≤ (ended_at − started_at) + 5 s: nunca se envía más que el tiempo transcurrido.
+    const startedAt = t.getStartedAt();
+    const elapsedSeconds = Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000));
     await recordReadingSession({
       id: newId(),
       articleId: article.id,
       doseId: d.id,
-      startedAt: t.startedAt.toISOString(),
-      endedAt: new Date().toISOString(),
-      activeSeconds: t.getSeconds(),
+      startedAt: startedAt.toISOString(),
+      endedAt: endedAt.toISOString(),
+      activeSeconds: Math.min(t.getSeconds(), elapsedSeconds),
       completed: done,
       quizCorrect,
     });

@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { getContainer } from '../../data/container';
 import { logger } from '../../lib/logger';
+import { useSettingsStore } from '../../state/settingsStore';
 import { subscribeOnline } from '../network';
 
 const PROGRESS_KEYS = [['articleProgress'], ['articles'], ['readingStats']] as const;
@@ -31,7 +32,9 @@ export function useSyncTriggers() {
     const run = async () => {
       try {
         await sync.flush();
-        await settingsSync?.sync();
+        const settings = await settingsSync?.sync();
+        // Si otro dispositivo cambió los ajustes, se refresca lo que ve la app.
+        if (settings?.direction === 'pulled') await useSettingsStore.getState().hydrate();
       } catch (e) {
         logger.warn('Sincronización fallida', e);
       }

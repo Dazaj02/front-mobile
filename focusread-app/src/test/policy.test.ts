@@ -37,6 +37,16 @@ describe('políticas del plan', () => {
     expect(keys.map(rel)).toEqual([]);
   });
 
+  it('la service_role de Supabase nunca aparece en la app (solo la anon key, que es pública)', () => {
+    const offenders = files(SRC).filter((p) => /service_role|SERVICE_ROLE/.test(read(p)));
+    expect(offenders.map(rel)).toEqual([]);
+  });
+
+  it('todas las consultas a Supabase son de lectura, update de favorito/ajustes, delete de artículo o upsert de sesiones (nada de insert)', () => {
+    const offenders = files(path.join(SRC, 'data', 'remote')).filter((p) => /\.insert\(/.test(read(p)));
+    expect(offenders.map(rel)).toEqual([]);
+  });
+
   it('la app nunca inserta artículos, dosis ni quiz directamente (solo la API o el gateway mock)', () => {
     const callers = files(SRC).filter((p) => /\.save\(|\.insert\(/.test(read(p)));
     // Permitidos: el gateway mock, la siembra de ejemplos del modo mock (useLoadExamples) y la

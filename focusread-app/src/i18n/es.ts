@@ -5,6 +5,7 @@ import { isAppError } from '../lib/errors';
 export const es = {
   appName: 'FocusRead',
   tabs: { library: 'Biblioteca', progress: 'Progreso', settings: 'Ajustes' },
+  boot: { failedTitle: 'No se pudo iniciar FocusRead' },
   common: {
     back: 'Volver',
     cancel: 'Cancelar',

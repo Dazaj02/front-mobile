@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS } from '../../domain/defaults';
+import { AppError } from '../../lib/errors';
 import { computeStats, mergeSessions } from '../../domain/stats';
 import { SyncService } from '../../services/sync/SyncService';
 import { FakeRemote } from '../../test/fakeRemote';
@@ -40,7 +41,7 @@ describe('outbox + sincronización de sesiones', () => {
 
     online = true;
     remote.online = true;
-    expect(await sync.flush()).toEqual({ sent: 3, failed: 0, remaining: 0, skipped: false });
+    expect(await sync.flush()).toEqual({ sent: 3, failed: 0, dropped: 0, remaining: 0, skipped: false });
     expect(remote.sessions.size).toBe(3);
     expect(await outbox.count()).toBe(0);
 
@@ -97,6 +98,31 @@ describe('outbox + sincronización de sesiones', () => {
     await sync.flush(); // falla y queda con espera
     expect(await sync.flush()).toMatchObject({ sent: 0 }); // en espera
     expect(await sync.flush({ ignoreBackoff: true })).toMatchObject({ sent: 1, remaining: 0 });
+  });
+
+  it('una sesión rechazada de forma permanente (restricción/RLS) se descarta y no bloquea la cola', async () => {
+    const { outbox, sync } = composeOffline(getDb, remote.adapters(), isOnline);
+    const [bad, good] = [makeSession(), makeSession()];
+    await outbox.enqueue(bad);
+    await outbox.enqueue(good);
+    const original = remote.progressRepo.recordSession;
+    jest.spyOn(remote.progressRepo, 'recordSession').mockImplementation(async (s) => {
+      if (s.id === bad.id) throw new AppError('VALIDATION_ERROR', 'check violation');
+      return original(s);
+    });
+    const result = await sync.flush();
+    expect(result).toMatchObject({ sent: 1, dropped: 1, failed: 0, remaining: 0 });
+    expect(remote.sessions.has(good.id)).toBe(true);
+    expect(remote.sessions.has(bad.id)).toBe(false);
+  });
+
+  it('sin sesión válida (401) se detiene y conserva todo lo pendiente', async () => {
+    const { outbox, sync } = composeOffline(getDb, remote.adapters(), isOnline);
+    for (let i = 0; i < 3; i++) await outbox.enqueue(makeSession());
+    const spy = jest.spyOn(remote.progressRepo, 'recordSession').mockRejectedValue(new AppError('UNAUTHORIZED', 'x'));
+    const result = await sync.flush();
+    expect(result).toMatchObject({ sent: 0, failed: 1, remaining: 3 });
+    expect(spy).toHaveBeenCalledTimes(1); // no insiste con las demás
   });
 
   it('nunca hay dos flush simultáneos', async () => {
@@ -322,6 +348,49 @@ describe('ajustes: local al instante y última escritura gana', () => {
     await flushMicrotasks();
     remote.settings = null;
     expect(await repo.sync()).toEqual({ direction: 'pushed' });
+  });
+
+  it('un reloj del teléfono atrasado NO hace perder ediciones propias (el servidor fija su propia fecha)', async () => {
+    remote.serverSkewMs = 10 * 60_000; // el servidor va 10 min adelantado
+    const { repo, local } = setup();
+    await repo.update({ theme: 'sepia' });
+    await flushMicrotasks();
+    expect(remote.settings?.settings.theme).toBe('sepia');
+
+    clock += 60_000; // un minuto después el usuario vuelve a cambiar algo (su fecha sigue "antes" que la del servidor)
+    online = false;
+    await repo.update({ theme: 'dark' });
+    online = true;
+    expect(await repo.sync()).toEqual({ direction: 'pushed' }); // no se baja lo viejo
+    expect(remote.settings?.settings.theme).toBe('dark');
+    expect((await repo.get()).theme).toBe('dark');
+    expect(await local.isDirty()).toBe(false);
+  });
+
+  it('si OTRO dispositivo escribió después, sus cambios ganan sobre los locales pendientes', async () => {
+    const { repo } = setup();
+    await repo.update({ theme: 'sepia' });
+    await flushMicrotasks(); // baseline = 12:00
+    clock += 1_000;
+    online = false;
+    await repo.update({ speechRate: 1.5 }); // edición local pendiente a las 12:00:01
+    remote.settings = { settings: { ...DEFAULT_SETTINGS, theme: 'dark' }, updatedAt: '2026-09-30T12:05:00.000Z' }; // otro dispositivo, más tarde
+    online = true;
+    expect((await repo.sync()).direction).toBe('pulled');
+    expect(await repo.get()).toMatchObject({ theme: 'dark', speechRate: 1 });
+  });
+
+  it('si OTRO dispositivo escribió ANTES de la edición local pendiente, gana la local', async () => {
+    const { repo } = setup();
+    await repo.update({ theme: 'sepia' });
+    await flushMicrotasks();
+    remote.settings = { settings: { ...DEFAULT_SETTINGS, theme: 'dark' }, updatedAt: '2026-09-30T12:00:30.000Z' };
+    clock += 60_000;
+    online = false;
+    await repo.update({ speechRate: 1.5 }); // 12:01:00, posterior a lo del otro dispositivo
+    online = true;
+    expect((await repo.sync()).direction).toBe('pushed');
+    expect(remote.settings?.settings.speechRate).toBe(1.5);
   });
 
   it('compara fechas reales aunque el servidor use otro formato (+00:00)', async () => {

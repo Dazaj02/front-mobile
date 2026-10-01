@@ -7,6 +7,19 @@ export interface HttpClientOptions {
   getToken: () => Promise<string | null>;
   fetchImpl?: typeof fetch;
   timeoutMs?: number; // 90 s por defecto (procesar con IA puede tardar)
+  // Devuelve un token nuevo (o null si no se pudo refrescar). Se llama como máximo UNA vez por solicitud.
+  onUnauthorized?: () => Promise<string | null>;
+  // Se llama cuando la sesión no se pudo recuperar: la app debe cerrar sesión.
+  onSessionExpired?: () => void;
+}
+
+// En release solo se permite HTTPS (la key BYOK viaja en un header). En desarrollo se admite http
+// (emulador 10.0.2.2, IP de la LAN).
+export function assertSecureApiUrl(url: string, isDev: boolean): string {
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\/.+/i.test(trimmed)) throw new Error('EXPO_PUBLIC_API_URL no es una URL válida');
+  if (!isDev && !/^https:\/\//i.test(trimmed)) throw new Error('En release EXPO_PUBLIC_API_URL debe usar HTTPS');
+  return trimmed;
 }
 
 export interface RequestOptions<S extends z.ZodType | undefined> {
@@ -40,28 +53,38 @@ export function createHttpClient(options: HttpClientOptions) {
     const token = await getToken();
     if (!token) throw new AppError('UNAUTHORIZED', 'No hay sesión activa');
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let response: Response;
-    try {
-      response = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
-        method: opts.method ?? 'GET',
-        headers: {
-          Accept: opts.accept,
-          ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-          ...opts.headers,
-          Authorization: `Bearer ${token}`,
-        },
-        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-        signal: controller.signal,
-      });
-    } catch (e) {
-      if (controller.signal.aborted) {
-        throw new AppError('CLIENT_TIMEOUT', 'La solicitud tardó demasiado', { cause: e });
+    const doFetch = async (bearer: string): Promise<Response> => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
+          method: opts.method ?? 'GET',
+          headers: {
+            Accept: opts.accept,
+            ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+            ...opts.headers,
+            Authorization: `Bearer ${bearer}`,
+          },
+          body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+          signal: controller.signal,
+        });
+      } catch (e) {
+        if (controller.signal.aborted) {
+          throw new AppError('CLIENT_TIMEOUT', 'La solicitud tardó demasiado', { cause: e });
+        }
+        throw new AppError('NETWORK_ERROR', 'No se pudo conectar con el servidor', { cause: e });
+      } finally {
+        clearTimeout(timer);
       }
-      throw new AppError('NETWORK_ERROR', 'No se pudo conectar con el servidor', { cause: e });
-    } finally {
-      clearTimeout(timer);
+    };
+
+    let response = await doFetch(token);
+
+    // Ante un 401: UN solo intento de refrescar la sesión y repetir. Si vuelve a fallar, se cierra la sesión.
+    if (response.status === 401 && options.onUnauthorized) {
+      const fresh = await options.onUnauthorized();
+      if (fresh) response = await doFetch(fresh);
+      if (response.status === 401 || !fresh) options.onSessionExpired?.();
     }
 
     const requestId = response.headers.get('X-Request-Id') ?? undefined;

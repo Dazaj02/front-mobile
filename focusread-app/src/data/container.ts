@@ -10,6 +10,7 @@ import type {
 import type { CloudTtsGateway } from './api/HttpTtsGateway';
 import type { SyncService } from '../services/sync/SyncService';
 import type { SyncedSettingsRepository } from './offline/SyncedSettingsRepository';
+import { createLiveContainer } from './liveContainer';
 import { getDb } from './local/db';
 import { LocalArticleRepository } from './local/LocalArticleRepository';
 import { LocalProgressRepository } from './local/LocalProgressRepository';
@@ -38,6 +39,8 @@ export interface Container {
   settingsSync?: SyncedSettingsRepository;
   // Voces de alta calidad vía backend (propuesta temporal, ver docs/PROPUESTA_TTS_NUBE.md). Solo live.
   tts?: CloudTtsGateway;
+  // Solo live: despierta el servidor (Render gratis duerme a los 15 min) sin esperar la respuesta.
+  warmUp?: () => Promise<void>;
 }
 
 export function readDataMode(value: string | undefined = process.env.EXPO_PUBLIC_DATA_MODE): DataMode {
@@ -51,7 +54,15 @@ export function getContainer(): Container {
   if (instance) return instance;
   const mode = readDataMode();
   if (mode === 'live') {
-    throw new Error('El modo live se implementa en F8: usa EXPO_PUBLIC_DATA_MODE=mock');
+    // Las variables EXPO_PUBLIC_* se sustituyen en la compilación: deben leerse con su nombre literal.
+    instance = createLiveContainer({
+      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      cloudTts: process.env.EXPO_PUBLIC_CLOUD_TTS,
+      isDev: __DEV__,
+    });
+    return instance;
   }
   const localArticles = new LocalArticleRepository(getDb);
   const auth = new MockAuthRepository();

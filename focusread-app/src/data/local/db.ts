@@ -36,5 +36,7 @@ export async function clearLocalData(db: SqlDb): Promise<void> {
     for (const table of ['quiz_questions', 'doses', 'articles', 'reading_sessions', 'reading_sessions_outbox', 'settings']) {
       await db.runAsync(`DELETE FROM ${table}`);
     }
+    // Estado de sincronización de ajustes (sucio / referencia remota): no debe pasar al siguiente usuario.
+    await db.runAsync("DELETE FROM meta WHERE key <> 'schema_version'");
   });
 }

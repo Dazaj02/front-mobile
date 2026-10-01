@@ -5,15 +5,22 @@ export const MAX_ACTIVE_SECONDS = 7200;
 export class ActiveTimer {
   private accumulatedMs = 0;
   private runningSince: number | null = null;
+  private readonly createdAt: number;
+  private firstStartedAt: number | null = null;
 
-  constructor(private readonly now: () => number = Date.now) {}
+  constructor(private readonly now: () => number = Date.now) {
+    this.createdAt = now();
+  }
 
   get running(): boolean {
     return this.runningSince !== null;
   }
 
   start(): void {
-    if (this.runningSince === null) this.runningSince = this.now();
+    if (this.runningSince === null) {
+      this.runningSince = this.now();
+      if (this.firstStartedAt === null) this.firstStartedAt = this.runningSince;
+    }
   }
 
   pause(): void {
@@ -26,6 +33,12 @@ export class ActiveTimer {
   reset(): void {
     this.accumulatedMs = 0;
     this.runningSince = null;
+    this.firstStartedAt = null;
+  }
+
+  // Momento (ms) en que empezó la lectura: el primer `start`, o la creación si aún no corrió.
+  startedAtMs(): number {
+    return this.firstStartedAt ?? this.createdAt;
   }
 
   elapsedSeconds(): number {

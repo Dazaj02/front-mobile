@@ -5,7 +5,8 @@ import type { LocalSettingsRepository } from '../local/settingsCache';
 
 export interface RemoteSettings {
   get(): Promise<{ settings: UserSettings; updatedAt: string } | null>;
-  put(settings: UserSettings, updatedAt: string): Promise<void>;
+  // Devuelve la fecha con la que el servidor guardó el cambio (su trigger pone `updated_at = now()`).
+  put(settings: UserSettings, localUpdatedAt: string): Promise<string | void>;
 }
 
 export interface SettingsSyncResult {
@@ -13,7 +14,10 @@ export interface SettingsSyncResult {
 }
 
 // Los ajustes se guardan en local AL INSTANTE y se suben cuando hay conexión.
-// Conflictos: gana la última escritura (por `updatedAt`).
+// Conflictos: gana la última escritura. Como el servidor fija `updated_at` con SU reloj, cada
+// dispositivo recuerda la fecha remota de su última sincronización (`baseline`): solo si el remoto
+// cambió DESPUÉS de esa referencia (otro dispositivo) se comparan las fechas; si no, los cambios
+// locales se suben siempre. Así un reloj del teléfono atrasado no hace perder ediciones propias.
 export class SyncedSettingsRepository implements SettingsRepository {
   constructor(
     private readonly local: LocalSettingsRepository,
@@ -32,33 +36,46 @@ export class SyncedSettingsRepository implements SettingsRepository {
     return next;
   }
 
-  // Reconcilia con el remoto: sube lo local si es más nuevo o pendiente; baja lo remoto si es más nuevo.
   async sync(): Promise<SettingsSyncResult> {
     if (!this.isOnline()) return { direction: 'offline' };
     const remote = await this.remote.get();
-    const localUpdatedAt = await this.local.getUpdatedAt();
+    const localAt = await this.local.getUpdatedAt();
     const dirty = await this.local.isDirty();
 
     if (!remote) {
-      if (!localUpdatedAt) return { direction: 'none' };
-      await this.remote.put(await this.local.get(), localUpdatedAt);
-      await this.local.clearDirty();
+      if (!localAt) return { direction: 'none' };
+      await this.push(localAt);
       return { direction: 'pushed' };
     }
 
+    const baseline = await this.local.getRemoteBaseline();
     const remoteTime = Date.parse(remote.updatedAt);
-    const localTime = localUpdatedAt ? Date.parse(localUpdatedAt) : -Infinity;
+    const remoteChanged = remoteTime > (baseline ? Date.parse(baseline) : -Infinity);
+    const localTime = localAt ? Date.parse(localAt) : -Infinity;
 
-    if (remoteTime > localTime) {
-      await this.local.replace(remote.settings, remote.updatedAt);
-      await this.local.clearDirty();
+    if (!dirty) {
+      if (!remoteChanged) return { direction: 'none' };
+      await this.pull(remote);
       return { direction: 'pulled' };
     }
-    if (localTime > remoteTime || dirty) {
-      await this.remote.put(await this.local.get(), localUpdatedAt as string);
-      await this.local.clearDirty();
-      return { direction: 'pushed' };
+    // Hay cambios locales sin subir: solo ceden si otro dispositivo escribió después.
+    if (remoteChanged && remoteTime > localTime) {
+      await this.pull(remote);
+      return { direction: 'pulled' };
     }
-    return { direction: 'none' };
+    await this.push(localAt as string);
+    return { direction: 'pushed' };
+  }
+
+  private async push(localUpdatedAt: string): Promise<void> {
+    const serverAt = await this.remote.put(await this.local.get(), localUpdatedAt);
+    await this.local.setRemoteBaseline(serverAt ?? localUpdatedAt);
+    await this.local.clearDirty();
+  }
+
+  private async pull(remote: { settings: UserSettings; updatedAt: string }): Promise<void> {
+    await this.local.replace(remote.settings, remote.updatedAt);
+    await this.local.setRemoteBaseline(remote.updatedAt);
+    await this.local.clearDirty();
   }
 }

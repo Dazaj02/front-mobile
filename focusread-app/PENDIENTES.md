@@ -73,6 +73,17 @@
 | D59 | F7+ | **Solicitud de cambio de contrato NO aplicada:** endpoints `GET /v1/tts/voices` y `POST /v1/tts`. El contrato está congelado: hay que llevar la propuesta al agente backend (y que la apruebe David). Se evitó tocar `UserSettings` usando el prefijo `cloud:` en `voiceId` | **Pendiente: David → agente backend** |
 | D60 | F7+ | `container.tts` y `enableCloudTts()` los debe cablear F8 (contenedor live) | Pendiente F8 |
 
+| D61 | F8 | **Conflictos de ajustes rediseñados.** El trigger de Supabase pone `updated_at = now()` (reloj del servidor) en cada update, así que comparar con la hora del teléfono podía hacer perder ediciones (reloj atrasado). Ahora cada dispositivo guarda la fecha remota de su última sincronización (`settings_remote_at`); solo si el remoto cambió después se compara con la edición local. Probado, incluido reloj desfasado | Aceptada |
+| D62 | F8 | `SyncService` **descarta** las sesiones que el servidor rechaza de forma permanente (`VALIDATION_ERROR`: check, FK o RLS) en vez de reintentar para siempre (el plan decía "solo se borra si OK"). Queda registrado en el log y en `FlushResult.dropped`. Un 401 detiene el envío sin descartar nada | Aceptada |
+| D63 | F8 | El lector limita `activeSeconds` a `(endedAt − startedAt)`: la base exige `active_seconds ≤ duración + 5 s` y una violación bloquearía la sesión | Aceptada |
+| D64 | F8 | Recuperación de contraseña con Supabase: canjear el código crea una sesión; `SupabaseAuthRepository` la oculta (`recovering`) hasta cambiar la contraseña para que la app no salte la pantalla de nueva contraseña; después cierra la sesión y vuelve al login | Aceptada |
+| D65 | F8 | Aislamiento entre usuarios: al cerrar sesión se vacía la caché de React Query, `clearLocalData` también borra el estado de sincronización (`meta`), y al iniciar sesión se recargan los ajustes | Aceptada |
+| D66 | F8 | `AppBootstrap` muestra los errores de configuración (variables del modo live ausentes, API no HTTPS en release) en vez de un spinner infinito, y despierta el servidor con `GET /health` al abrir (Render gratis duerme) | Aceptada |
+| D67 | F8 | `EXPO_PUBLIC_CLOUD_TTS=1` activa las voces en la nube; apagado por defecto porque el backend aún no tiene `/v1/tts` | Aceptada |
+| D68 | F8 | **Falta la verificación manual extremo a extremo** (registro, correo, deep link, recuperación, importar texto y URL, BYOK válida e inválida, cuota, offline, eliminar cuenta, aislamiento con 2 cuentas). Guía en `docs/F8_PRUEBA_LIVE.md`. Requiere backend en live (o Render), `.env` en `live` y las Redirect URLs en el panel de Supabase | **Pendiente David** |
+| D69 | F8 | Del backend (`NOTAS_BACKEND.md`): **C1** (warning `CONTENT_TRUNCATED` para artículos largos por URL) es un cambio de contrato pendiente de decisión de David; **P13** (la service_role se pegó una vez en un archivo versionado de `back-mobile`, no llegó al historial): se recomienda rotarla | **Decisión/acción de David** |
+| D70 | F8 | **TTS en la nube, respuesta del backend:** viable con Azure Neural (nomenclatura `es-MX-JorgeNeural`, género nativo, SSML, MP3). Requiere decidir proveedor y presupuesto (free tier F0: 0,5 M caracteres/mes ≈ 160 dosis/mes en total: poco para varios usuarios), una cuota por caracteres en la base de datos (`consume_tts_quota`, pedir al agente de BD) y un límite propio para `/v1/tts` (el actual de 10/min se queda corto con prefetch). Mientras no se apruebe, el frontend usa la voz del sistema | **Decisión de David** |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |

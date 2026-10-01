@@ -17,7 +17,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 let article: ArticleWithDoses; // 2 dosis; el quiz está en la última
 
 const renderReader = async (doseIndex = 0) => renderScreen('Reader', ReaderScreen, { params: { articleId: article.id, doseIndex } });
-const sessions = async () => mockC.progress.listSessions('2000-01-01T00:00:00.000Z');
+// Desde 1970: algunas pruebas congelan Date.now en valores pequeños.
+const sessions = async () => mockC.progress.listSessions('1970-01-01T00:00:00.000Z');
 
 afterEach(() => jest.restoreAllMocks()); // devuelve Date.now / AppState aunque una prueba falle
 

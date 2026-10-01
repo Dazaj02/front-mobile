@@ -9,6 +9,7 @@ import { AppError } from '../lib/errors';
 export class FakeRemote {
   online = true;
   failNext = 0;
+  serverSkewMs = 0; // el reloj del servidor adelantado respecto al teléfono
   readonly articles = new Map<string, ArticleWithDoses>();
   readonly sessions = new Map<string, ReadingSession>();
   settings: { settings: UserSettings; updatedAt: string } | null = null;
@@ -77,10 +78,13 @@ export class FakeRemote {
       this.calls.settingsGet++;
       return this.settings;
     },
+    // Como el trigger de Supabase: el servidor fija la fecha (por defecto, la del cliente + `serverSkewMs`).
     put: async (settings: UserSettings, updatedAt: string) => {
       this.guard();
       this.calls.settingsPut++;
-      this.settings = { settings, updatedAt };
+      const serverAt = new Date(Date.parse(updatedAt) + this.serverSkewMs).toISOString();
+      this.settings = { settings, updatedAt: serverAt };
+      return serverAt;
     },
   };
 

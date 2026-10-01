@@ -57,6 +57,19 @@ export class LocalSettingsRepository implements SettingsRepository {
     return (await db.getFirstAsync("SELECT 1 AS d FROM meta WHERE key = 'settings_dirty'")) !== null;
   }
 
+  // Fecha remota (reloj del servidor) de la última sincronización: referencia para detectar
+  // cambios hechos desde otro dispositivo sin depender del reloj de este teléfono.
+  async getRemoteBaseline(): Promise<string | null> {
+    const db = await this.getDb();
+    const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'settings_remote_at'");
+    return row?.value ?? null;
+  }
+
+  async setRemoteBaseline(value: string): Promise<void> {
+    const db = await this.getDb();
+    await db.runAsync("INSERT OR REPLACE INTO meta (key, value) VALUES ('settings_remote_at', ?)", [value]);
+  }
+
   private async read(): Promise<{ settings: UserSettings; updatedAt: string | null }> {
     const db = await this.getDb();
     const row = await db.getFirstAsync<{ data: string; updated_at: string }>('SELECT data, updated_at FROM settings WHERE id = 1');
