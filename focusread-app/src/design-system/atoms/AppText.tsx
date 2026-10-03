@@ -9,6 +9,8 @@ export type TextColor =
   | 'secondary'
   | 'muted'
   | 'onAccent'
+  | 'inverse'
+  | 'inverseMuted'
   | 'accent'
   | 'success'
   | 'warning'
@@ -18,6 +20,7 @@ export interface AppTextProps extends Omit<TextProps, 'style'> {
   variant?: TextVariant;
   color?: TextColor;
   align?: 'left' | 'center' | 'right';
+  colorOverride?: string; // solo para vistas previas de otro tema (ThemeSwatch); viene de semanticTokens
 }
 
 export function textColorValue(colors: SemanticTokens, color: TextColor): string {
@@ -26,6 +29,8 @@ export function textColorValue(colors: SemanticTokens, color: TextColor): string
     secondary: colors.text.secondary,
     muted: colors.text.muted,
     onAccent: colors.text.onAccent,
+    inverse: colors.text.inverse,
+    inverseMuted: colors.text.inverseMuted,
     accent: colors.accent.default,
     success: colors.state.success,
     warning: colors.state.warning,
@@ -35,7 +40,7 @@ export function textColorValue(colors: SemanticTokens, color: TextColor): string
 }
 
 // Único componente del design system que renderiza <Text>.
-export function AppText({ variant = 'body', color = 'primary', align, ...rest }: AppTextProps) {
+export function AppText({ variant = 'body', color = 'primary', align, colorOverride, ...rest }: AppTextProps) {
   const { typography, colors } = useTheme();
-  return <Text {...rest} style={[typography[variant], { color: textColorValue(colors, color), textAlign: align }]} />;
+  return <Text {...rest} style={[typography[variant], { color: colorOverride ?? textColorValue(colors, color), textAlign: align }]} />;
 }

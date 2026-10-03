@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { Newsreader_400Regular, Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
+import { InstrumentSans_400Regular, InstrumentSans_500Medium, InstrumentSans_600SemiBold } from '@expo-google-fonts/instrument-sans';
+import { Newsreader_400Regular, Newsreader_400Regular_Italic, Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
 
 import { getContainer } from '../data/container';
 import { semanticTokens, spacing, createTypography } from '../design-system/tokens';
@@ -15,10 +15,11 @@ import { useSettingsStore } from '../state/settingsStore';
 // todavía no se conoce el tema del usuario.
 export function AppBootstrap({ children }: { children: React.ReactNode }) {
   const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
     Newsreader_400Regular,
+    Newsreader_400Regular_Italic,
     Newsreader_600SemiBold,
   });
   const hydrated = useSettingsStore((s) => s.hydrated);

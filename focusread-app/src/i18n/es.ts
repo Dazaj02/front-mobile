@@ -11,6 +11,7 @@ export const es = {
     cancel: 'Cancelar',
     loading: 'Cargando…',
     comingSoon: 'Esta pantalla llega en la siguiente fase.',
+    months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
   },
   auth: {
     welcomeTitle: 'Lee más, con menos esfuerzo',
@@ -136,6 +137,10 @@ export const es = {
     loadExamples: 'Cargar artículos de ejemplo',
     loadFailedTitle: 'No pudimos cargar tu biblioteca',
     continueReading: 'Continúa leyendo',
+    listTitle: 'Tu lista',
+    count: (n: number) => (n === 1 ? '1 artículo' : `${n} artículos`),
+    // "Miércoles 30 de septiembre": antetítulo de la Biblioteca
+    dateKicker: (d: Date) => `${es.progress.weekdays[d.getDay()]} ${d.getDate()} de ${es.common.months[d.getMonth()]}`,
     doseOf: (current: number, total: number) => `Dosis ${current} de ${total}`,
   },
   progress: {
@@ -147,6 +152,7 @@ export const es = {
     retention: 'Retención',
     retentionNone: 'Sin preguntas aún',
     weekTitle: 'Últimos 7 días',
+    weekTotal: (minutes: number) => `${minutes} min`,
     loadFailedTitle: 'No pudimos cargar tu progreso',
     weekdaysShort: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
     weekdays: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],

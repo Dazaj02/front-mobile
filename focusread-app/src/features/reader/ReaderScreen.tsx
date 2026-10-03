@@ -158,17 +158,17 @@ function ReaderBody({ article, initialIndex, onExit }: { article: ArticleWithDos
   return (
     <ReaderTemplate top={top} scrollKey={dose.id}>
       <View style={{ gap: spacing.lg }}>
-        <AppText variant="caption" color="secondary" numberOfLines={2}>
+        <AppText variant="overline" color="muted" numberOfLines={2}>
           {article.title}
         </AppText>
         {index === 0 && article.summaryPoints.length > 0 ? (
           <View style={{ gap: spacing.xs }}>
-            <AppText variant="label" color="accent" accessibilityRole="header">
+            <AppText variant="overline" color="accent" accessibilityRole="header">
               {es.reader.summary}
             </AppText>
             {article.summaryPoints.map((p, i) => (
-              <AppText key={i} variant="body" color="secondary">
-                • {p}
+              <AppText key={i} variant="quote" color="secondary">
+                — {p}
               </AppText>
             ))}
           </View>

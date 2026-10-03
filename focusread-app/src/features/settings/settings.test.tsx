@@ -54,7 +54,8 @@ describe('Ajustes › Apariencia', () => {
 describe('Ajustes › Lectura', () => {
   it('la duración objetivo y el quiz se guardan', async () => {
     await renderSettings();
-    await fireEvent.press(await screen.findByRole('button', { name: es.settings.doseMinutes(3.5) }));
+    // La duración se elige en un control segmentado: cada opción es un radio.
+    await fireEvent.press(await screen.findByRole('radio', { name: es.settings.doseMinutes(3.5) }));
     await fireEvent(screen.getByRole('switch', { name: es.settings.quiz }), 'valueChange', false);
     expect(useSettingsStore.getState()).toMatchObject({ targetDoseMinutes: 3.5, quizEnabled: false });
     await waitFor(async () => expect(await persisted()).toMatchObject({ targetDoseMinutes: 3.5, quizEnabled: false }));

@@ -12,6 +12,7 @@ export interface IconButtonProps {
   color?: TextColor;
   disabled?: boolean;
   selected?: boolean;
+  variant?: 'plain' | 'filled'; // filled: círculo de tinta para la acción principal del encabezado
 }
 
 export function IconButton({
@@ -21,8 +22,10 @@ export function IconButton({
   color = 'primary',
   disabled = false,
   selected,
+  variant = 'plain',
 }: IconButtonProps) {
   const { components: c, colors, opacity } = useTheme();
+  const filled = variant === 'filled';
   return (
     <Pressable
       accessibilityRole="button"
@@ -37,10 +40,16 @@ export function IconButton({
         alignItems: 'center',
         justifyContent: 'center',
         opacity: disabled ? opacity.disabled : 1,
-        backgroundColor: pressed || selected ? colors.accent.subtle : 'transparent',
+        backgroundColor: filled
+          ? pressed
+            ? colors.accent.pressed
+            : c.iconButton.filled.bg
+          : pressed || selected
+            ? colors.accent.subtle
+            : 'transparent',
       })}
     >
-      <Icon name={icon} size="md" color={color} />
+      <Icon name={icon} size="md" color={filled ? 'inverse' : color} />
     </Pressable>
   );
 }

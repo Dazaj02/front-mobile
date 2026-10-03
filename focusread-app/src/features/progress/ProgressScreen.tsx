@@ -28,7 +28,7 @@ export function toChartData(stats: ReadingStats) {
 
 function StatRow({ children }: { children: React.ReactNode }) {
   const { spacing } = useTheme();
-  return <View style={{ flexDirection: 'row', gap: spacing.md }}>{children}</View>;
+  return <View style={{ flexDirection: 'row', gap: spacing.xl }}>{children}</View>;
 }
 
 export function ProgressScreen() {
@@ -46,10 +46,11 @@ export function ProgressScreen() {
       <>
         {/* El contrato no define una meta diaria: se muestra lo leído hoy, sin barra de meta. */}
         <DailyProgressCard minutesToday={stats.minutesToday} dosesToday={stats.dosesToday} />
-        <View style={{ gap: spacing.md }}>
+        {/* Rejilla editorial 2×2: sin cajas, con un filete entre filas. */}
+        <View>
           <StatRow>
-            <StatTile label={es.progress.minutes} value={String(stats.totalMinutes)} icon="time-outline" />
-            <StatTile label={es.progress.doses} value={String(stats.completedDoses)} icon="checkmark-done-outline" />
+            <StatTile label={es.progress.minutes} value={String(stats.totalMinutes)} icon="time-outline" divider />
+            <StatTile label={es.progress.doses} value={String(stats.completedDoses)} icon="checkmark-done-outline" divider />
           </StatRow>
           <StatRow>
             <StatTile label={es.progress.streak} value={es.progress.streakValue(stats.streakDays)} icon="flame-outline" />
@@ -62,12 +63,15 @@ export function ProgressScreen() {
           </StatRow>
         </View>
         <View style={{ gap: spacing.md }}>
-          <SectionHeader title={es.progress.weekTitle} />
+          <SectionHeader
+            title={es.progress.weekTitle}
+            meta={es.progress.weekTotal(stats.last7Days.reduce((n, d) => n + d.minutes, 0))}
+          />
           <WeeklyChart data={toChartData(stats)} />
         </View>
       </>
     );
   }
 
-  return <AppScreen header={{ title: es.progress.title }}>{body}</AppScreen>;
+  return <AppScreen header={{ title: es.progress.title, size: 'large' }}>{body}</AppScreen>;
 }

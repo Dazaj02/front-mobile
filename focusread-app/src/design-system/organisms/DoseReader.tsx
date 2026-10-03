@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { AppText } from '../atoms/AppText';
 import { Button } from '../atoms/Button';
-import { ProgressBar } from '../atoms/ProgressBar';
+import { SegmentedProgress } from '../atoms/SegmentedProgress';
 import { useTheme } from '../theme/useTheme';
 
 export interface DoseReaderProps {
@@ -23,11 +23,12 @@ export function DoseReader({ title, content, position, total, progress, onPrev, 
   const isLast = position >= total - 1;
   return (
     <View style={{ gap: spacing.lg }}>
-      <View style={{ gap: spacing.xs }}>
-        <AppText variant="caption" color="secondary">
-          Dosis {position + 1} de {total}
+      <View style={{ gap: spacing.sm }}>
+        <AppText variant="overline" color="accent">
+          {`Dosis ${position + 1} de ${total}`}
         </AppText>
-        <ProgressBar value={progress} accessibilityLabel={`Progreso de la dosis ${position + 1}`} />
+        {/* Un segmento por dosis: las anteriores llenas y la actual según el tiempo activo. */}
+        <SegmentedProgress total={total} completed={position} partial={progress} accessibilityLabel={`Progreso de la dosis ${position + 1}`} />
       </View>
       {title ? (
         <AppText variant="readingTitle" accessibilityRole="header">

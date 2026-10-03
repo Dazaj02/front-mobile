@@ -50,6 +50,12 @@ pairs.push(['text.onAccent / accent.default', (t) => t.text.onAccent, (t) => t.a
 for (const [sn, sg] of [...surfaces.slice(0, 2), ['accent.subtle', (t: SemanticTokens) => t.accent.subtle] as [string, (t: SemanticTokens) => string]]) {
   pairs.push([`accent.default / ${sn}`, (t) => t.accent.default, sg, 4.5]);
 }
+// Superficie de tinta (bg.inverse): su texto y el botón invertido (texto primario sobre text.inverse).
+pairs.push(['text.inverse / bg.inverse', (t) => t.text.inverse, (t) => t.bg.inverse, 4.5]);
+pairs.push(['text.inverseMuted / bg.inverse', (t) => t.text.inverseMuted, (t) => t.bg.inverse, 4.5]);
+pairs.push(['text.primary / text.inverse', (t) => t.text.primary, (t) => t.text.inverse, 4.5]);
+// La barra destacada de la gráfica se distingue de las neutras y del fondo.
+pairs.push(['data.highlight / bg.base', (t) => t.data.highlight, (t) => t.bg.base, 3]);
 for (const [sn, sg] of surfaces.slice(0, 2)) {
   for (const k of ['success', 'warning', 'danger'] as const) {
     pairs.push([`state.${k} / ${sn}`, (t) => t.state[k], sg, 4.5]);

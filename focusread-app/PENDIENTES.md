@@ -91,6 +91,11 @@
 | D75 | F9 | `eas.json` define `development`/`preview`/`production`; la URL y anon key de Supabase NO van en git: se suben a EAS con `scripts/eas-set-env.ps1`. API en HTTPS (`https://focusread-api.onrender.com`) | Hecho |
 | D76 | F9 | El APK `preview` y el smoke test requieren tu cuenta de EAS y tu teléfono (guía `docs/F9_APK.md`). Nombre "FocusRead" provisional; íconos aún los de plantilla de Expo | **Pendiente David** |
 
+| D77 | Rediseño | **Rediseño editorial hecho con Claude Design** (cambios de David aplicados sobre el código; no los escribí yo). Papel cálido + tinta + acento índigo; tipografía **Instrument Sans** (UI) y **Newsreader** con cursiva (voz editorial); nuevos tokens (`bg.inverse`, `text.inverse*`, `data.*`, `heroCard`, `listRow`, `segmentedProgress`, `segmentedControl`, `chart`); nuevas variantes (`Button inverse` / `iconPosition`, `IconButton filled`, `Chip underline`) y componentes (`SegmentedProgress`, `SegmentedControl`); tarjeta "Continúa leyendo" en tinta; barra segmentada por dosis; gráfico semanal con la barra de hoy resaltada | Aceptada |
+| D78 | Rediseño | **Desvío del plan §6:** el plan fija Inter y los hex iniciales de §6.2. El propio plan dice que el test de contraste es la autoridad y los valores "son iniciales", pero la **tipografía cambió de Inter a Instrument Sans** y se añadieron roles (`hero`, `metric`, `quote`, `overline`, `titleSerif`). Verificado: el contraste de todos los pares (incluidos los de tinta) pasa en los 3 temas | Aceptada |
+| D79 | Rediseño | El error al arrancar tras el rediseño era `@expo-google-fonts/instrument-sans` **no instalada** (el `package.json` la pedía y `node_modules` no la tenía): se resolvió con `npm install`. Se añadieron tests de `SegmentedProgress` y `SegmentedControl` (no tenían). Verificado: `tsc` OK, tests en verde, lint 0, `expo-doctor` 21/21 y `expo export` empaqueta bien | Resuelta |
+| D80 | Rediseño | **Ya no se necesita `@expo-google-fonts/inter`:** quitada del `package.json` por el rediseño. Si algún texto siguiera pidiendo `Inter_*`, caería a la fuente del sistema sin avisar (no queda ninguno: `grep` y `tsc`) | Resuelta |
+
 ## 2. Pendientes por resolver
 
 | # | Tema | Cuándo | Necesita |

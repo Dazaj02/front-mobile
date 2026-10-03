@@ -8,6 +8,7 @@ import { Spinner } from '../../design-system/atoms/Spinner';
 import { useWindowClass } from '../../design-system/layout/useWindowClass';
 import { FilterChipGroup } from '../../design-system/molecules/FilterChipGroup';
 import { SearchBar } from '../../design-system/molecules/SearchBar';
+import { SectionHeader } from '../../design-system/molecules/SectionHeader';
 import { ArticleCard } from '../../design-system/organisms/ArticleCard';
 import { ContinueReadingCard } from '../../design-system/organisms/ContinueReadingCard';
 import { EmptyState } from '../../design-system/organisms/EmptyState';
@@ -80,9 +81,11 @@ export function LibraryScreen() {
     body = <EmptyState icon="search-outline" title={es.library.noResultsTitle} message={es.library.noResultsMessage} />;
   } else {
     body = (
-      <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' }}>
+      <View style={{ gap: spacing.xs }}>
+        <SectionHeader title={es.library.listTitle} meta={es.library.count(visible.length)} />
+      <View style={{ flexDirection: 'row', gap: spacing.xl, alignItems: 'flex-start' }}>
         {columns.map((col, c) => (
-          <View key={c} style={{ flex: 1, minWidth: 0, gap: spacing.md }}>
+          <View key={c} style={{ flex: 1, minWidth: 0 }}>
             {col.map((item) => (
               <ArticleCard
                 key={item.article.id}
@@ -103,6 +106,7 @@ export function LibraryScreen() {
           </View>
         ))}
       </View>
+      </View>
     );
   }
 
@@ -110,21 +114,26 @@ export function LibraryScreen() {
     <AppScreen
       header={{
         title: es.library.title,
-        // Un solo botón Importar en toda la app.
-        actions: [{ icon: 'add', label: es.library.import, onPress: openImport }],
+        kicker: es.library.dateKicker(new Date()),
+        size: 'large',
+        // Un solo botón Importar en toda la app (acción principal: círculo de tinta).
+        actions: [{ icon: 'add', label: es.library.import, onPress: openImport, emphasis: 'filled' }],
       }}
     >
       {items.length > 0 ? (
         <>
           <SearchBar value={query} onChangeText={setQuery} placeholder={es.library.search} />
-          <FilterChipGroup options={filterOptions} value={filter} onChange={setFilter} />
+          <FilterChipGroup options={filterOptions} value={filter} onChange={setFilter} variant="underline" />
         </>
       ) : null}
       {showContinue ? (
         <ContinueReadingCard
           title={continueItem.article.title}
           doseLabel={es.library.doseOf(continueItem.completedDoses + 1, continueItem.article.doseCount)}
-          progress={continueItem.progress}
+          totalDoses={continueItem.article.doseCount}
+          completedDoses={continueItem.completedDoses}
+          category={continueItem.article.category}
+          excerpt={continueItem.article.summaryPoints[0]}
           onContinue={() => openReader(continueItem.article.id, nextDoseIndex(continueItem))}
         />
       ) : null}

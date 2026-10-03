@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import { AppText } from '../atoms/AppText';
 import { ProgressBar } from '../atoms/ProgressBar';
 import { useTheme } from '../theme/useTheme';
-import { borderWidth } from '../tokens';
 
 export interface DailyProgressCardProps {
   minutesToday: number;
@@ -12,28 +11,33 @@ export interface DailyProgressCardProps {
   goalMinutes?: number; // el contrato no define meta diaria: sin ella no hay barra
 }
 
+// Editorial: la cifra del día es la protagonista, en serif grande, sobre un filete.
 export function DailyProgressCard({ minutesToday, dosesToday, goalMinutes }: DailyProgressCardProps) {
   const { components: c, spacing } = useTheme();
-  const summary = `Hoy: ${minutesToday} min leídos, ${dosesToday} ${dosesToday === 1 ? 'dosis completada' : 'dosis completadas'}`;
+  const doses = `${dosesToday} ${dosesToday === 1 ? 'dosis completada' : 'dosis completadas'}`;
+  const summary = `Hoy: ${minutesToday} min leídos, ${doses}`;
   return (
     <View
       accessible
       accessibilityLabel={goalMinutes ? `${summary}. Meta ${goalMinutes} minutos` : summary}
       style={{
-        gap: spacing.sm,
-        padding: c.card.padding,
-        borderRadius: c.card.radius,
-        backgroundColor: c.card.bg,
-        borderWidth: borderWidth.thin,
-        borderColor: c.card.border,
+        gap: spacing.xs,
+        paddingBottom: spacing.xl,
+        borderBottomWidth: c.listRow.dividerWidth,
+        borderBottomColor: c.listRow.divider,
       }}
     >
       <AppText variant="label" color="secondary">
-        Tu día
+        Hoy llevas
       </AppText>
-      <AppText variant="headline">{minutesToday} min</AppText>
-      <AppText variant="caption" color="muted">
-        {dosesToday} {dosesToday === 1 ? 'dosis completada' : 'dosis completadas'}
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
+        <AppText variant="metric">{minutesToday}</AppText>
+        <AppText variant="headline" color="secondary">
+          min
+        </AppText>
+      </View>
+      <AppText variant="quote" color="secondary">
+        {doses}
       </AppText>
       {goalMinutes ? (
         <ProgressBar value={minutesToday / goalMinutes} accessibilityLabel={`Meta diaria de ${goalMinutes} minutos`} />

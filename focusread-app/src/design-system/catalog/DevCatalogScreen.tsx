@@ -257,7 +257,15 @@ export function DevCatalogScreen({ onClose }: { onClose: () => void }) {
         </Section>
 
         <Section title="Biblioteca">
-          <ContinueReadingCard title="El futuro de la lectura en pantallas" doseLabel="Dosis 2 de 5" progress={0.4} onContinue={noop} />
+          <ContinueReadingCard
+            title="El futuro de la lectura en pantallas"
+            doseLabel="Dosis 2 de 5"
+            totalDoses={5}
+            completedDoses={1}
+            category="Ciencia"
+            excerpt="Leer en tramos breves reduce la fatiga y mejora el recuerdo."
+            onContinue={noop}
+          />
           <DailyProgressCard minutesToday={18} dosesToday={6} goalMinutes={30} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
             {[0, 1].map((i) => (

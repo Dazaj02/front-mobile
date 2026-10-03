@@ -21,7 +21,7 @@ export function WelcomeScreen({ navigation }: NativeStackScreenProps<AuthStackPa
   return (
     <AuthTemplate brand={<AuthBrand />}>
       <View style={{ gap: spacing.sm }}>
-        <AppText variant="headline" align="center">
+        <AppText variant="hero" align="center">
           {es.auth.welcomeTitle}
         </AppText>
         <AppText variant="body" color="secondary" align="center">
