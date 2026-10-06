@@ -93,6 +93,7 @@
 
 | D77 | Diseño | **Se vuelve al diseño visual de `main` por indicación del profesor** (el diseño con tokens del plan §6: acento azul `#1D4ED8`, tipografía Inter + Newsreader, tarjetas con borde y el resto de componentes de F2/F3). Se hizo con `git revert` del commit editorial `26dd6b9`, que era puramente visual (tokens, tipografía, variantes de componentes y estilos de pantallas): **todo lo funcional de F8 y F9 se conserva**. El rediseño editorial no se pierde: sigue en la rama local `rediseno-editorial` y en el historial de `rediseno` | Hecho |
 | D78 | Diseño | Con la reversión, el desvío del plan §6 (tipografía) desaparece: vuelven Inter + Newsreader y los tokens del plan; los tests de contraste y de componentes son los de F2/F3 | Resuelta |
+| D79 | Diseño | Tema papel adaptado a la paleta del prototipo original (surface #FBF8FF, on-surface #1A1B22, on-surface-variant #434655, outline-variant #C4C5D7, surface-container #EEEDF7, primary-container #1D4ED8 como azul primario, primary #0037B0 al presionar, primary-fixed #DCE1FF, error #BA1A1A). El texto atenuado queda en #5E6070 (el outline original #747686 no pasa 4.5:1 como texto; se usa solo en bordes). Contraste y 135 tests de design-system en verde | Resuelta; pendiente que David valide visualmente |
 
 ## 2. Pendientes por resolver
 
