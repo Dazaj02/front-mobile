@@ -6,7 +6,6 @@ export * from './FormField';
 export * from './PasswordField';
 export * from './SearchBar';
 export * from './SectionHeader';
-export * from './SegmentedControl';
 export * from './SettingRow';
 export * from './SliderField';
 export * from './StatTile';

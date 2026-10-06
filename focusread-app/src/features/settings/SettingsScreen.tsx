@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { AppText } from '../../design-system/atoms/AppText';
 import { Button } from '../../design-system/atoms/Button';
-import { SegmentedControl } from '../../design-system/molecules/SegmentedControl';
+import { Chip } from '../../design-system/atoms/Chip';
 import { Divider } from '../../design-system/atoms/Divider';
 import { Spinner } from '../../design-system/atoms/Spinner';
 import { Switch } from '../../design-system/atoms/Switch';
@@ -64,10 +64,10 @@ export function SettingsScreen() {
     speakAny(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
 
   return (
-    <AppScreen header={{ title: es.settings.title, size: 'large' }}>
+    <AppScreen header={{ title: es.settings.title }}>
       {/* Apariencia */}
       <View style={{ gap: spacing.md }}>
-        <SectionHeader title={es.settings.appearance} variant="overline" />
+        <SectionHeader title={es.settings.appearance} />
         <AppText variant="label" color="secondary">
           {es.settings.theme}
         </AppText>
@@ -85,16 +85,15 @@ export function SettingsScreen() {
 
       {/* Lectura */}
       <View style={{ gap: spacing.sm }}>
-        <SectionHeader title={es.settings.reading} variant="overline" />
+        <SectionHeader title={es.settings.reading} />
         <AppText variant="label" color="secondary">
           {es.settings.doseDuration}
         </AppText>
-        <SegmentedControl
-          accessibilityLabel={es.settings.doseDuration}
-          options={DOSE_OPTIONS.map((m) => ({ id: m, label: es.settings.doseMinutes(m) }))}
-          value={s.targetDoseMinutes}
-          onChange={(m) => s.update({ targetDoseMinutes: m })}
-        />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {DOSE_OPTIONS.map((m) => (
+            <Chip key={m} label={es.settings.doseMinutes(m)} selected={s.targetDoseMinutes === m} onPress={() => s.update({ targetDoseMinutes: m })} />
+          ))}
+        </View>
         <SettingRow
           title={es.settings.quiz}
           description={es.settings.quizHint}
@@ -105,7 +104,7 @@ export function SettingsScreen() {
 
       {/* Voz: solo voces reales del sistema en español */}
       <View style={{ gap: spacing.sm }}>
-        <SectionHeader title={es.settings.voice} variant="overline" />
+        <SectionHeader title={es.settings.voice} />
         {voices.isLoading ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <Spinner accessibilityLabel={es.settings.voicesLoading} />
@@ -186,7 +185,7 @@ export function SettingsScreen() {
 
       {/* Accesibilidad */}
       <View style={{ gap: spacing.sm }}>
-        <SectionHeader title={es.settings.accessibility} variant="overline" />
+        <SectionHeader title={es.settings.accessibility} />
         <SettingRow
           title={es.settings.haptics}
           description={es.settings.hapticsHint}
@@ -207,7 +206,7 @@ export function SettingsScreen() {
 
       {/* Motor de IA */}
       <View style={{ gap: spacing.sm }}>
-        <SectionHeader title={es.settings.aiEngine} variant="overline" />
+        <SectionHeader title={es.settings.aiEngine} />
         <SettingRow
           title={es.settings.aiEngine}
           description={s.aiProvider === 'focusread' ? es.settings.aiEngineValue : s.aiProvider}
@@ -218,7 +217,7 @@ export function SettingsScreen() {
 
       {/* Cuenta */}
       <View style={{ gap: spacing.sm }}>
-        <SectionHeader title={es.settings.account} variant="overline" />
+        <SectionHeader title={es.settings.account} />
         {email ? (
           <AppText variant="body" color="secondary">
             {es.settings.signedInAs(email)}

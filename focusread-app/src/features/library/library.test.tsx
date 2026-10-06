@@ -98,8 +98,7 @@ describe('Biblioteca', () => {
     await mockC.progress.recordSession(makeSession({ articleId: habits.id, doseId: habits.doses[0].id }));
     const { navigationRef } = await renderLibrary();
     expect(await screen.findByText(es.library.continueReading)).toBeTruthy();
-    // La dosis pendiente aparece en la tarjeta "Continúa leyendo" y en la fila del artículo.
-    expect(screen.getAllByText(es.library.doseOf(2, habits.doseCount))).toHaveLength(2);
+    expect(screen.getByText(es.library.doseOf(2, habits.doseCount))).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
     await waitFor(() => expect(navigationRef.current?.getCurrentRoute()?.name).toBe('Reader'));

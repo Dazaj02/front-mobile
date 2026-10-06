@@ -2,9 +2,11 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '../atoms/AppText';
+import { Badge } from '../atoms/Badge';
 import { IconButton } from '../atoms/IconButton';
-import { SegmentedProgress } from '../atoms/SegmentedProgress';
+import { ProgressBar } from '../atoms/ProgressBar';
 import { useTheme } from '../theme/useTheme';
+import { borderWidth } from '../tokens';
 
 export interface ArticleCardProps {
   title: string;
@@ -18,15 +20,6 @@ export interface ArticleCardProps {
   bookmarkDisabled?: boolean; // sin conexión
 }
 
-// Estado de lectura en palabras: la fila lo muestra junto a la barra segmentada.
-export function articleMeta(doseCount: number, totalMinutes: number, progress: number): string {
-  const done = Math.round(Math.min(1, Math.max(0, progress)) * doseCount);
-  if (done >= doseCount) return 'Completado';
-  if (done > 0) return `Dosis ${done + 1} de ${doseCount}`;
-  return `${doseCount} dosis · ${totalMinutes} min`;
-}
-
-// Editorial: fila sin caja (antetítulo de categoría, título en serif, filete inferior).
 export function ArticleCard({
   title,
   category,
@@ -38,50 +31,37 @@ export function ArticleCard({
   onToggleBookmark,
   bookmarkDisabled = false,
 }: ArticleCardProps) {
-  const { components: c, spacing, opacity } = useTheme();
+  const { components: c, spacing } = useTheme();
   const percent = Math.round(progress * 100);
   const summary = `${doseCount} dosis, ${totalMinutes} min`;
-  const completed = Math.round(Math.min(1, Math.max(0, progress)) * doseCount);
   return (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: spacing.sm,
-        borderBottomWidth: c.listRow.dividerWidth,
-        borderBottomColor: c.listRow.divider,
+        borderRadius: c.card.radius,
+        backgroundColor: c.card.bg,
+        borderWidth: borderWidth.thin,
+        borderColor: c.card.border,
+        elevation: c.card.elevation,
       }}
     >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${title}. ${category ? `${category}. ` : ''}${summary}. Progreso ${percent} %`}
         onPress={onPress}
-        style={({ pressed }) => ({
-          flex: 1,
-          minWidth: 0,
-          gap: spacing.xs + spacing.xxs,
-          paddingVertical: c.listRow.paddingY,
-          opacity: pressed ? 1 - opacity.pressedOverlay * 2 : 1,
-        })}
+        style={{ flex: 1, minWidth: 0, gap: spacing.sm, padding: c.card.padding }}
       >
-        {category ? (
-          <AppText variant="overline" color="accent">
-            {category}
-          </AppText>
-        ) : null}
-        <AppText variant="titleSerif" numberOfLines={3}>
+        {category ? <Badge label={category} tone="accent" /> : null}
+        <AppText variant="title" numberOfLines={3}>
           {title}
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <AppText variant="caption" color="muted">
-            {articleMeta(doseCount, totalMinutes, progress)}
-          </AppText>
-          <View style={{ width: spacing.xxxl * 2 }}>
-            <SegmentedProgress total={doseCount} completed={completed} accessibilityLabel={`Progreso de ${title}`} />
-          </View>
-        </View>
+        <AppText variant="caption" color="secondary">
+          {summary}
+        </AppText>
+        <ProgressBar value={progress} accessibilityLabel={`Progreso de ${title}`} />
       </Pressable>
-      <View style={{ paddingTop: c.listRow.paddingY - spacing.sm }}>
+      <View style={{ paddingTop: spacing.xs, paddingRight: spacing.xs }}>
         <IconButton
           icon={bookmarked ? 'bookmark' : 'bookmark-outline'}
           accessibilityLabel={bookmarked ? 'Quitar de guardados' : 'Guardar artículo'}

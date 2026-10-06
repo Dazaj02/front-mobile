@@ -21,9 +21,8 @@ export interface BottomTabBarProps {
 }
 
 // Presentacional: en F5 se conecta a React Navigation mediante la prop `tabBar`.
-// Editorial: mismo papel que la pantalla, filete superior y un punto de tinta bajo la pestaña activa.
 export function BottomTabBar({ tabs, activeKey, onSelect }: BottomTabBarProps) {
-  const { components: c, spacing } = useTheme();
+  const { components: c } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -33,7 +32,6 @@ export function BottomTabBar({ tabs, activeKey, onSelect }: BottomTabBarProps) {
         flexDirection: 'row',
         minHeight: c.tabBar.height + insets.bottom,
         paddingBottom: insets.bottom,
-        paddingHorizontal: spacing.md,
         backgroundColor: c.tabBar.bg,
         borderTopWidth: borderWidth.thin,
         borderTopColor: c.tabBar.border,
@@ -48,25 +46,17 @@ export function BottomTabBar({ tabs, activeKey, onSelect }: BottomTabBarProps) {
             accessibilityLabel={t.label}
             accessibilityState={{ selected: active }}
             onPress={() => onSelect(t.key)}
-            style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs, minHeight: c.tabBar.height }}
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: c.tabBar.height }}
           >
-            <Icon name={active ? t.iconActive : t.icon} color={active ? 'primary' : 'muted'} />
+            <Icon name={active ? t.iconActive : t.icon} color={active ? 'accent' : 'muted'} />
             <AppText
               variant="caption"
-              color={active ? 'primary' : 'muted'}
+              color={active ? 'accent' : 'muted'}
               maxFontSizeMultiplier={c.tabBar.labelMaxFontMultiplier}
               numberOfLines={1}
             >
               {t.label}
             </AppText>
-            <View
-              style={{
-                width: c.tabBar.indicator,
-                height: c.tabBar.indicator,
-                borderRadius: c.tabBar.indicator,
-                backgroundColor: active ? c.tabBar.active : 'transparent',
-              }}
-            />
           </Pressable>
         );
       })}

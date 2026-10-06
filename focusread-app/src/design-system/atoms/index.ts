@@ -6,7 +6,6 @@ export * from './Divider';
 export * from './Icon';
 export * from './IconButton';
 export * from './ProgressBar';
-export * from './SegmentedProgress';
 export * from './Spinner';
 export * from './Switch';
 export * from './TextInputBase';

@@ -4,17 +4,16 @@ import { View } from 'react-native';
 import { AppText } from '../atoms/AppText';
 import { Icon, type IconName } from '../atoms/Icon';
 import { useTheme } from '../theme/useTheme';
+import { borderWidth } from '../tokens';
 
 export interface StatTileProps {
   label: string;
   value: string;
   icon?: IconName;
   hint?: string;
-  divider?: boolean; // filete inferior (rejilla editorial)
 }
 
-// Editorial: sin caja; etiqueta discreta arriba y cifra en serif.
-export function StatTile({ label, value, icon, hint, divider = false }: StatTileProps) {
+export function StatTile({ label, value, icon, hint }: StatTileProps) {
   const { components: c, spacing } = useTheme();
   return (
     <View
@@ -25,18 +24,18 @@ export function StatTile({ label, value, icon, hint, divider = false }: StatTile
         flexBasis: 0,
         minWidth: 0,
         gap: spacing.xs,
-        paddingVertical: spacing.lg,
-        borderBottomWidth: divider ? c.listRow.dividerWidth : 0,
-        borderBottomColor: c.listRow.divider,
+        padding: c.card.padding,
+        borderRadius: c.card.radius,
+        backgroundColor: c.card.bg,
+        borderWidth: borderWidth.thin,
+        borderColor: c.card.border,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-        {icon ? <Icon name={icon} size="sm" color="muted" /> : null}
-        <AppText variant="label" color="muted">
-          {label}
-        </AppText>
-      </View>
-      <AppText variant="display">{value}</AppText>
+      {icon ? <Icon name={icon} color="accent" /> : null}
+      <AppText variant="headline">{value}</AppText>
+      <AppText variant="label" color="secondary">
+        {label}
+      </AppText>
       {hint ? (
         <AppText variant="caption" color="muted">
           {hint}
