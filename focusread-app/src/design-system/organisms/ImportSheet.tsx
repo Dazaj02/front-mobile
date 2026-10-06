@@ -22,6 +22,11 @@ export interface ImportSheetProps {
   onUrlChange: (url: string) => void;
   duration: ImportDuration;
   onDurationChange: (d: ImportDuration) => void;
+  categories?: readonly string[]; // categorías sugeridas (opcional)
+  category?: string | null;
+  onCategoryChange?: (category: string | null) => void;
+  categoryLabel?: string;
+  categoryHint?: string;
   providerLabel: string; // "FocusRead (incluido)"
   status: ImportStatus;
   errorMessage?: string;
@@ -46,6 +51,11 @@ export function ImportSheet({
   onUrlChange,
   duration,
   onDurationChange,
+  categories = [],
+  category = null,
+  onCategoryChange,
+  categoryLabel = 'Categoría',
+  categoryHint,
   providerLabel,
   status,
   errorMessage,
@@ -124,6 +134,24 @@ export function ImportSheet({
             ))}
           </View>
         </View>
+
+        {onCategoryChange && categories.length > 0 ? (
+          <View style={{ gap: spacing.xs }}>
+            <AppText variant="label" color="secondary">
+              {categoryLabel}
+            </AppText>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {categories.map((c) => (
+                <Chip key={c} label={c} selected={category === c} onPress={() => onCategoryChange(category === c ? null : c)} />
+              ))}
+            </View>
+            {categoryHint ? (
+              <AppText variant="caption" color="muted">
+                {categoryHint}
+              </AppText>
+            ) : null}
+          </View>
+        ) : null}
 
         <AppText variant="caption" color="secondary">
           Motor de IA: {providerLabel}

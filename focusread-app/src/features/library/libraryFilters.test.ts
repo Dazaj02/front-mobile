@@ -1,6 +1,6 @@
 import type { Article } from '../../domain/contract';
 import { makeArticle } from '../../test/fixtures';
-import { applyFilter, isCompleted, isInProgress, nextDoseIndex, pickContinueReading, toLibraryItems } from './libraryFilters';
+import { applyFilter, isCompleted, isInProgress, listCategories, nextDoseIndex, pickContinueReading, toLibraryItems, withCategories } from './libraryFilters';
 
 const article = (o: Partial<Article> & { id?: string }): Article => {
   const { doses: _doses, ...base } = makeArticle({ title: o.title ?? 'A', doseCount: o.doseCount ?? 4 });
@@ -75,5 +75,23 @@ describe('continuar leyendo', () => {
 
   it('isInProgress / isCompleted son excluyentes', () => {
     for (const i of items) expect(isInProgress(i) && isCompleted(i)).toBe(false);
+  });
+});
+
+describe('categorías', () => {
+  it('la categoría elegida por el usuario prevalece sobre la del servidor', () => {
+    const merged = withCategories(items, { [a.id]: 'Ciencia', [b.id]: 'Salud' });
+    expect(merged.map((i) => i.article.category)).toEqual(['Ciencia', 'Salud', 'Pruebas']);
+  });
+
+  it('listCategories devuelve las presentes, sin repetir y ordenadas', () => {
+    const merged = withCategories(items, { [a.id]: 'Salud', [c.id]: 'Salud' });
+    expect(listCategories(merged)).toEqual(['Estudio', 'Salud']);
+  });
+
+  it('applyFilter filtra por categoría y se combina con la búsqueda', () => {
+    const merged = withCategories(items, { [a.id]: 'Salud', [c.id]: 'Salud' });
+    expect(applyFilter(merged, 'all', '', 'Salud').map((i) => i.article.title)).toEqual(['Sueño y memoria', 'Hábitos']);
+    expect(applyFilter(merged, 'all', 'habit', 'Salud').map((i) => i.article.title)).toEqual(['Hábitos']);
   });
 });

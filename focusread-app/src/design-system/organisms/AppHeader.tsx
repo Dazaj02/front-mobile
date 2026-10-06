@@ -1,9 +1,9 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { AppText } from '../atoms/AppText';
+import { Icon, type IconName } from '../atoms/Icon';
 import { IconButton } from '../atoms/IconButton';
-import type { IconName } from '../atoms/Icon';
 import { useTheme } from '../theme/useTheme';
 
 export interface HeaderAction {
@@ -11,6 +11,7 @@ export interface HeaderAction {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  primary?: boolean; // botón azul relleno con texto (acción principal de la pantalla)
 }
 
 export interface AppHeaderProps {
@@ -21,7 +22,7 @@ export interface AppHeaderProps {
 }
 
 export function AppHeader({ title, subtitle, onBack, actions = [] }: AppHeaderProps) {
-  const { spacing, sizes } = useTheme();
+  const { spacing, sizes, colors, radii } = useTheme();
   return (
     <View
       style={{
@@ -43,9 +44,34 @@ export function AppHeader({ title, subtitle, onBack, actions = [] }: AppHeaderPr
           </AppText>
         ) : null}
       </View>
-      {actions.map((a) => (
-        <IconButton key={a.label} icon={a.icon} accessibilityLabel={a.label} onPress={a.onPress} disabled={a.disabled} />
-      ))}
+      {actions.map((a) =>
+        a.primary ? (
+          <Pressable
+            key={a.label}
+            accessibilityRole="button"
+            accessibilityLabel={a.label}
+            accessibilityState={{ disabled: Boolean(a.disabled) }}
+            disabled={a.disabled}
+            onPress={a.onPress}
+            style={({ pressed }) => ({
+              minHeight: sizes.touchMin,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xs,
+              paddingHorizontal: spacing.lg,
+              borderRadius: radii.pill,
+              backgroundColor: pressed ? colors.accent.pressed : colors.accent.default,
+            })}
+          >
+            <Icon name={a.icon} size="sm" color="onAccent" />
+            <AppText variant="label" color="onAccent">
+              {a.label}
+            </AppText>
+          </Pressable>
+        ) : (
+          <IconButton key={a.label} icon={a.icon} accessibilityLabel={a.label} onPress={a.onPress} disabled={a.disabled} />
+        ),
+      )}
     </View>
   );
 }

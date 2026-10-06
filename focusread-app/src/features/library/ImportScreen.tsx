@@ -4,6 +4,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { ImportSheet, type ImportDuration, type ImportMode, type ImportStatus } from '../../design-system/organisms/ImportSheet';
 import { SheetTemplate } from '../../design-system/templates/SheetTemplate';
+import { PRESET_CATEGORIES } from '../../domain/categories';
+import { useCategoryStore } from '../../state/categoryStore';
 import { getContainer } from '../../data/container';
 import type { ProcessArticleRequest } from '../../domain/contract';
 import type { ByokProviderId } from '../../domain/ports';
@@ -26,6 +28,8 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
   const [text, setText] = useState('');
   const [url, setUrl] = useState('');
   const [duration, setDuration] = useState<ImportDuration>(defaultDuration);
+  const [category, setCategory] = useState<string | null>(null);
+  const assignCategory = useCategoryStore((s) => s.assign);
   const [status, setStatus] = useState<ImportStatus>('idle');
   const [error, setError] = useState<string | undefined>();
   const [degraded, setDegraded] = useState(false);
@@ -51,7 +55,8 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
         ...(model ? { model } : {}),
         includeQuiz: true,
       };
-      const { warnings } = await ai.process(request, key);
+      const { article, warnings } = await ai.process(request, key);
+      if (category) assignCategory(article.id, category);
       await Promise.all([qc.invalidateQueries({ queryKey: articlesKey }), qc.invalidateQueries({ queryKey: articleProgressKey })]);
       void haptic('success');
       if (warnings.includes('AI_ENRICHMENT_DEGRADED')) {
@@ -77,6 +82,11 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
         onUrlChange={setUrl}
         duration={duration}
         onDurationChange={setDuration}
+        categories={PRESET_CATEGORIES}
+        category={category}
+        onCategoryChange={setCategory}
+        categoryLabel={es.importSheet.category}
+        categoryHint={es.importSheet.categoryHint}
         providerLabel={providerLabel}
         status={status}
         errorMessage={error}

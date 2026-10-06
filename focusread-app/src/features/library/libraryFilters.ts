@@ -32,9 +32,10 @@ export const isInProgress = (i: LibraryItem) => i.completedDoses > 0 && !isCompl
 // Búsqueda sin distinguir mayúsculas ni acentos.
 const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-export function applyFilter(items: readonly LibraryItem[], filter: LibraryFilter, query = ''): LibraryItem[] {
+export function applyFilter(items: readonly LibraryItem[], filter: LibraryFilter, query = '', category: string | null = null): LibraryItem[] {
   const q = normalize(query.trim());
   return items.filter((i) => {
+    if (category && i.article.category !== category) return false;
     if (q && !normalize(`${i.article.title} ${i.article.category ?? ''}`).includes(q)) return false;
     switch (filter) {
       case 'inProgress':
@@ -61,4 +62,14 @@ export function pickContinueReading(items: readonly LibraryItem[]): LibraryItem 
 // Primera dosis pendiente (o la última si ya terminó).
 export function nextDoseIndex(item: LibraryItem): number {
   return Math.min(item.completedDoses, item.article.doseCount - 1);
+}
+
+// Aplica las categorías elegidas por el usuario sobre las del servidor.
+export function withCategories(items: readonly LibraryItem[], overrides: Readonly<Record<string, string>>): LibraryItem[] {
+  return items.map((i) => (overrides[i.article.id] ? { ...i, article: { ...i.article, category: overrides[i.article.id] } } : i));
+}
+
+// Categorías presentes en la biblioteca, en orden alfabético.
+export function listCategories(items: readonly LibraryItem[]): string[] {
+  return [...new Set(items.map((i) => i.article.category).filter((c): c is string => Boolean(c)))].sort((a, b) => a.localeCompare(b, 'es'));
 }

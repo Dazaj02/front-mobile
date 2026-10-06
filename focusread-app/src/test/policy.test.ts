@@ -64,8 +64,8 @@ describe('políticas del plan', () => {
     expect(bad.map(rel)).toEqual([]);
   });
 
-  it('AsyncStorage solo lo importan la sesión cifrada y la sesión mock (nunca las keys BYOK)', () => {
+  it('AsyncStorage solo lo importan la sesión cifrada, la sesión mock y las categorías locales (nunca las keys BYOK)', () => {
     const importers = files(SRC).filter((p) => /from '@react-native-async-storage\/async-storage'/.test(read(p)));
-    expect(importers.map(rel).sort()).toEqual(['data/mock/MockAuthRepository.ts', 'data/secure/LargeSecureStore.ts']);
+    expect(importers.map(rel).sort()).toEqual(['data/mock/MockAuthRepository.ts', 'data/secure/LargeSecureStore.ts', 'state/categoryStore.ts']);
   });
 });

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,13 +14,16 @@ import { EmptyState } from '../../design-system/organisms/EmptyState';
 import { ErrorState } from '../../design-system/organisms/ErrorState';
 import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
+import { useCategoryStore } from '../../state/categoryStore';
 import { getContainer } from '../../data/container';
 import { es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
 import { useNetworkGate } from '../../services/network';
-import { applyFilter, LIBRARY_FILTERS, nextDoseIndex, pickContinueReading, toLibraryItems, type LibraryFilter } from './libraryFilters';
+import { applyFilter, LIBRARY_FILTERS, listCategories, nextDoseIndex, pickContinueReading, toLibraryItems, withCategories, type LibraryFilter } from './libraryFilters';
 import { useArticleProgress, useArticles, useLoadExamples, useToggleBookmark } from './useLibraryData';
+
+const ALL_CATEGORIES = '__all__';
 
 export function LibraryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -32,12 +35,17 @@ export function LibraryScreen() {
   const loadExamples = useLoadExamples();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<LibraryFilter>('all');
+  const [category, setCategory] = useState<string | null>(null);
+  const overrides = useCategoryStore((s) => s.byArticle);
+  const hydrateCategories = useCategoryStore((s) => s.hydrate);
+  useEffect(() => void hydrateCategories(), [hydrateCategories]);
   const gate = useNetworkGate(); // favorito requiere conexión (solo en live)
 
-  const items = useMemo(() => toLibraryItems(articles.data ?? [], progress.data ?? []), [articles.data, progress.data]);
-  const visible = useMemo(() => applyFilter(items, filter, query), [items, filter, query]);
+  const items = useMemo(() => withCategories(toLibraryItems(articles.data ?? [], progress.data ?? []), overrides), [articles.data, progress.data, overrides]);
+  const categories = useMemo(() => listCategories(items), [items]);
+  const visible = useMemo(() => applyFilter(items, filter, query, category), [items, filter, query, category]);
   const continueItem = useMemo(() => pickContinueReading(items), [items]);
-  const showContinue = continueItem && filter === 'all' && query.trim() === '';
+  const showContinue = continueItem && filter === 'all' && category === null && query.trim() === '';
 
   // Reparte las tarjetas en columnas según la clase de ventana (1 en compacto, 2 en medio y expandido).
   const columns = useMemo(() => {
@@ -111,13 +119,20 @@ export function LibraryScreen() {
       header={{
         title: es.library.title,
         // Un solo botón Importar en toda la app.
-        actions: [{ icon: 'add', label: es.library.import, onPress: openImport }],
+        actions: [{ icon: 'add', label: es.library.import, onPress: openImport, primary: true }],
       }}
     >
       {items.length > 0 ? (
         <>
           <SearchBar value={query} onChangeText={setQuery} placeholder={es.library.search} />
           <FilterChipGroup options={filterOptions} value={filter} onChange={setFilter} />
+          {categories.length > 0 ? (
+            <FilterChipGroup
+              options={[{ id: ALL_CATEGORIES, label: es.library.allCategories }, ...categories.map((c) => ({ id: c, label: c }))]}
+              value={category ?? ALL_CATEGORIES}
+              onChange={(c) => setCategory(c === ALL_CATEGORIES ? null : c)}
+            />
+          ) : null}
         </>
       ) : null}
       {showContinue ? (
