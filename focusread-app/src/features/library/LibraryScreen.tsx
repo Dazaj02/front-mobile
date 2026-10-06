@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -16,12 +16,12 @@ import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
 import { useCategoryStore } from '../../state/categoryStore';
 import { getContainer } from '../../data/container';
-import { es } from '../../i18n/es';
+import { errorMessage, es } from '../../i18n/es';
 import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
 import { useNetworkGate } from '../../services/network';
 import { applyFilter, LIBRARY_FILTERS, listCategories, nextDoseIndex, pickContinueReading, toLibraryItems, withCategories, type LibraryFilter } from './libraryFilters';
-import { useArticleProgress, useArticles, useLoadExamples, useToggleBookmark } from './useLibraryData';
+import { useArticleProgress, useArticles, useDeleteArticle, useLoadExamples, useToggleBookmark } from './useLibraryData';
 
 const ALL_CATEGORIES = '__all__';
 
@@ -33,6 +33,7 @@ export function LibraryScreen() {
   const progress = useArticleProgress();
   const toggleBookmark = useToggleBookmark();
   const loadExamples = useLoadExamples();
+  const deleteArticle = useDeleteArticle();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [category, setCategory] = useState<string | null>(null);
@@ -53,6 +54,21 @@ export function LibraryScreen() {
     visible.forEach((item, i) => cols[i % libraryColumns].push(item));
     return cols;
   }, [visible, libraryColumns]);
+
+  // Confirmación antes de borrar: es irreversible y arrastra las dosis del artículo.
+  const confirmDelete = (id: string, title: string) =>
+    Alert.alert(es.library.deleteTitle, es.library.deleteBody(title), [
+      { text: es.common.cancel, style: 'cancel' },
+      {
+        text: es.library.delete,
+        style: 'destructive',
+        onPress: () =>
+          deleteArticle.mutate(id, {
+            onSuccess: () => void haptic('success'),
+            onError: (e) => Alert.alert(es.library.deleteFailed, errorMessage(e)),
+          }),
+      },
+    ]);
 
   const openReader = (articleId: string, doseIndex: number) => navigation.navigate('Reader', { articleId, doseIndex });
   const openImport = () => navigation.navigate('Import');
@@ -101,6 +117,8 @@ export function LibraryScreen() {
                 progress={item.progress}
                 bookmarked={item.article.bookmarked}
                 bookmarkDisabled={gate.blocked}
+                deleteDisabled={gate.blocked}
+                onDelete={() => confirmDelete(item.article.id, item.article.title)}
                 onPress={() => openReader(item.article.id, nextDoseIndex(item))}
                 onToggleBookmark={() => {
                   void haptic('selection');

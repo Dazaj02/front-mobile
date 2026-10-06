@@ -18,6 +18,8 @@ export interface ArticleCardProps {
   onPress: () => void;
   onToggleBookmark: () => void;
   bookmarkDisabled?: boolean; // sin conexión
+  onDelete?: () => void; // si se omite no se muestra el botón de eliminar
+  deleteDisabled?: boolean; // sin conexión
 }
 
 export function ArticleCard({
@@ -30,6 +32,8 @@ export function ArticleCard({
   onPress,
   onToggleBookmark,
   bookmarkDisabled = false,
+  onDelete,
+  deleteDisabled = false,
 }: ArticleCardProps) {
   const { components: c, spacing } = useTheme();
   const percent = Math.round(progress * 100);
@@ -69,6 +73,15 @@ export function ArticleCard({
           color={bookmarked ? 'accent' : 'secondary'}
           disabled={bookmarkDisabled}
         />
+        {onDelete ? (
+          <IconButton
+            icon="trash-outline"
+            accessibilityLabel={`Eliminar ${title}`}
+            onPress={onDelete}
+            color="secondary"
+            disabled={deleteDisabled}
+          />
+        ) : null}
       </View>
     </View>
   );

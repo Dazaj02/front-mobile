@@ -34,6 +34,15 @@ export function useToggleBookmark() {
   });
 }
 
+// Elimina el artículo con sus dosis (en live requiere conexión; el error lo gestiona quien llama).
+export function useDeleteArticle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => getContainer().articles.remove(id),
+    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: articlesKey }), qc.invalidateQueries({ queryKey: articleProgressKey })]),
+  });
+}
+
 // Solo modo mock: siembra la biblioteca con los artículos de ejemplo (textos originales).
 export function useLoadExamples() {
   const qc = useQueryClient();

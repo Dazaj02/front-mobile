@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { buildDemoArticles } from '../../data/mock/demoArticles';
@@ -138,5 +139,22 @@ describe('Biblioteca', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
     expect(await screen.findByText(TITLES.habits)).toBeTruthy();
     list.mockRestore();
+  });
+
+  it('eliminar pide confirmación; cancelar conserva el artículo y confirmar lo borra', async () => {
+    await seed();
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    await renderLibrary();
+    expect(await screen.findByText(TITLES.sleep)).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: `Eliminar ${TITLES.sleep}` }));
+    expect(alert).toHaveBeenCalledWith(es.library.deleteTitle, es.library.deleteBody(TITLES.sleep), expect.any(Array));
+    expect(screen.getByText(TITLES.sleep)).toBeTruthy(); // aún no se borra
+
+    const buttons = alert.mock.calls[0][2] ?? [];
+    buttons.find((b) => b.text === es.library.delete)?.onPress?.();
+    await waitFor(() => expect(screen.queryByText(TITLES.sleep)).toBeNull());
+    expect(screen.getByText(TITLES.habits)).toBeTruthy();
+    alert.mockRestore();
   });
 });
