@@ -64,7 +64,7 @@ export function SettingsScreen() {
     speakAny(es.settings.voiceTestSample, { voiceId, rate: s.speechRate, pitch: s.speechPitch });
 
   return (
-    <AppScreen header={{ title: es.settings.title }}>
+    <AppScreen header={{ title: es.settings.title, brand: es.appName }}>
       {/* Apariencia */}
       <View style={{ gap: spacing.md }}>
         <SectionHeader title={es.settings.appearance} />

@@ -11,6 +11,7 @@ import { SearchBar } from '../../design-system/molecules/SearchBar';
 import { ArticleCard } from '../../design-system/organisms/ArticleCard';
 import { ContinueReadingCard } from '../../design-system/organisms/ContinueReadingCard';
 import { EmptyState } from '../../design-system/organisms/EmptyState';
+import { DailyProgressCard } from '../../design-system/organisms/DailyProgressCard';
 import { ErrorState } from '../../design-system/organisms/ErrorState';
 import { AppScreen } from '../shared/AppScreen';
 import { useTheme } from '../../design-system/theme/useTheme';
@@ -21,6 +22,7 @@ import type { AppStackParamList } from '../../navigation/types';
 import { haptic } from '../../services/haptics';
 import { useNetworkGate } from '../../services/network';
 import { applyFilter, LIBRARY_FILTERS, listCategories, nextDoseIndex, pickContinueReading, toLibraryItems, withCategories, type LibraryFilter } from './libraryFilters';
+import { useReadingStats } from '../progress/useReadingStats';
 import { useArticleProgress, useArticles, useDeleteArticle, useLoadExamples, useToggleBookmark } from './useLibraryData';
 
 const ALL_CATEGORIES = '__all__';
@@ -40,6 +42,7 @@ export function LibraryScreen() {
   const overrides = useCategoryStore((s) => s.byArticle);
   const hydrateCategories = useCategoryStore((s) => s.hydrate);
   useEffect(() => void hydrateCategories(), [hydrateCategories]);
+  const stats = useReadingStats();
   const gate = useNetworkGate(); // favorito requiere conexión (solo en live)
 
   const items = useMemo(() => withCategories(toLibraryItems(articles.data ?? [], progress.data ?? []), overrides), [articles.data, progress.data, overrides]);
@@ -136,10 +139,14 @@ export function LibraryScreen() {
     <AppScreen
       header={{
         title: es.library.title,
+        brand: es.appName,
         // Un solo botón Importar en toda la app.
         actions: [{ icon: 'add', label: es.library.import, onPress: openImport, primary: true }],
       }}
     >
+      {items.length > 0 && stats.data ? (
+        <DailyProgressCard minutesToday={stats.data.minutesToday} dosesToday={stats.data.dosesToday} streakDays={stats.data.streakDays} />
+      ) : null}
       {items.length > 0 ? (
         <>
           <SearchBar value={query} onChangeText={setQuery} placeholder={es.library.search} />

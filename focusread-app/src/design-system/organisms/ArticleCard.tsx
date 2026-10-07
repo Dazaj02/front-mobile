@@ -60,9 +60,7 @@ export function ArticleCard({
         <AppText variant="title" numberOfLines={3}>
           {title}
         </AppText>
-        <AppText variant="caption" color="secondary">
-          {summary}
-        </AppText>
+        <Badge label={summary} icon="time-outline" />
         <ProgressBar value={progress} accessibilityLabel={`Progreso de ${title}`} />
       </Pressable>
       <View style={{ paddingTop: spacing.xs, paddingRight: spacing.xs }}>

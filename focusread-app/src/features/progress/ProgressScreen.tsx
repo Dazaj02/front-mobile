@@ -45,7 +45,7 @@ export function ProgressScreen() {
     body = (
       <>
         {/* El contrato no define una meta diaria: se muestra lo leído hoy, sin barra de meta. */}
-        <DailyProgressCard minutesToday={stats.minutesToday} dosesToday={stats.dosesToday} />
+        <DailyProgressCard minutesToday={stats.minutesToday} dosesToday={stats.dosesToday} streakDays={stats.streakDays} />
         <View style={{ gap: spacing.md }}>
           <StatRow>
             <StatTile label={es.progress.minutes} value={String(stats.totalMinutes)} icon="time-outline" />
@@ -69,5 +69,5 @@ export function ProgressScreen() {
     );
   }
 
-  return <AppScreen header={{ title: es.progress.title }}>{body}</AppScreen>;
+  return <AppScreen header={{ title: es.progress.title, brand: es.appName }}>{body}</AppScreen>;
 }

@@ -7,6 +7,7 @@ import {
   AudioMiniDock,
   AuthForm,
   BottomTabBar,
+  DailyProgressCard,
   DoseReader,
   EmptyState,
   ErrorState,
@@ -270,5 +271,17 @@ describe('EmptyState y ErrorState', () => {
     expect(screen.getByRole('alert')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
     expect(onRetry).toHaveBeenCalled();
+  });
+});
+
+describe('DailyProgressCard', () => {
+  it('con racha anuncia los días en la etiqueta accesible y el anillo queda oculto', async () => {
+    await renderWithTheme(<DailyProgressCard minutesToday={6} dosesToday={2} streakDays={3} />);
+    expect(screen.getByLabelText(/Hoy: 6 min leídos, 2 dosis completadas\. Racha de 3 días/)).toBeTruthy();
+  });
+
+  it('sin racha no cambia la etiqueta', async () => {
+    await renderWithTheme(<DailyProgressCard minutesToday={0} dosesToday={1} />);
+    expect(screen.getByLabelText('Hoy: 0 min leídos, 1 dosis completada')).toBeTruthy();
   });
 });
