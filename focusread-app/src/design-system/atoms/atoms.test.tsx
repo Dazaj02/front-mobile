@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import { renderWithTheme } from '../testUtils';
+import { flattenStyle, renderWithTheme } from '../testUtils';
 import { AppText, Badge, Button, Chip, Divider, Icon, IconButton, ProgressBar, Spinner, Switch, TextInputBase } from '.';
 
 describe('átomos: render y accesibilidad', () => {

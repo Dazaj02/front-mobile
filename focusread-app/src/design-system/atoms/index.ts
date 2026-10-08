@@ -9,3 +9,5 @@ export * from './ProgressBar';
 export * from './Spinner';
 export * from './Switch';
 export * from './TextInputBase';
+export * from './BrandMark';
+export * from './ProgressRing';
