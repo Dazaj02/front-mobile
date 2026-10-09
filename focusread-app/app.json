@@ -57,6 +57,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3f9b4747-a37e-4ff6-aaa5-d7459e781d69"
+      }
+    },
+    "owner": "aza02"
   }
 }
