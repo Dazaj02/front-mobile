@@ -99,6 +99,7 @@
 | D82 | Marca | Logo hecho con Claude Design integrado: icono de la app y adaptativo (fondo `#FBF8FF`), favicon y marca (`assets/brand/`, variantes claro/oscuro/monocromo y horizontal) usada en la pantalla de bienvenida. Parte de P5 (ícono) queda resuelta; sigue pendiente confirmar el nombre final de la app | Resuelta; falta verlo en el teléfono/APK |
 | D83 | Diseño | Cabecera de las 3 pestañas con la marca y el nombre de la app sobre el título; tarjeta de día con anillo de racha (semana de 7 días, `react-native-svg` 15.15.4 vía `expo install`) en Biblioteca y Progreso; etiqueta de duración con reloj en las tarjetas. El anillo muestra la racha, no una meta diaria (el contrato no define meta) | Resuelta; falta que David lo vea en Expo Go |
 | D84 | Diseño | La marca (libro + foco) se tiñe con el acento del tema (`tintColor`): azul en papel, ámbar en sepia, azul claro en oscuro; antes quedaba azul en sepia. Los PNG `mark-dark*` ya no se usan. El icono de la app y el logo horizontal siguen en azul (no dependen del tema) | Resuelta |
+| D85 | Release | APK `preview` compilado en EAS (build 6e521c44, cuenta aza02, v1.0.0) y verificado con `apk-check`: OK (4 permisos + el interno de AndroidX, sin backup, no debuggable, sin texto plano). Se bloquearon USE_BIOMETRIC/USE_FINGERPRINT (secure-store). Nombre de la app: se mantiene FocusRead AI | Resuelta; falta el smoke test en el teléfono (F8 en el APK, TalkBack, matriz responsive) y los Redirect URLs `focusread://…` en Supabase |
 
 ## 2. Pendientes por resolver
 
