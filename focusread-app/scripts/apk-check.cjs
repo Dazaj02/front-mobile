@@ -26,13 +26,15 @@ async function main() {
   console.log(`Paquete:     ${info.package ?? manifest.package}`);
   console.log(`Versión:     ${info.versionName} (versionCode ${info.versionCode})`);
   console.log(`Permisos (${permissions.length}):`);
-  permissions.forEach((p) => console.log(`  - ${p}${ALLOWED.has(p) ? '' : '   <-- NO esperado'}`));
+  permissions.forEach((p) => console.log(`  - ${p}${ALLOWED.has(p) || p.endsWith('.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION') ? '' : '   <-- NO esperado'}`));
   console.log(`allowBackup: ${app.allowBackup}`);
   console.log(`debuggable:  ${app.debuggable}`);
   console.log(`cleartext:   ${app.usesCleartextTraffic}`);
 
   const problems = [];
-  for (const p of permissions) if (!ALLOWED.has(p)) problems.push(`permiso inesperado: ${p}`);
+  // Permiso interno que AndroidX declara para el propio paquete (nivel firma): no da acceso a nada.
+  const isInternal = (p) => p === `${info.package ?? manifest.package}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`;
+  for (const p of permissions) if (!ALLOWED.has(p) && !isInternal(p)) problems.push(`permiso inesperado: ${p}`);
   for (const p of permissions) if (FORBIDDEN_HINTS.some((h) => p.includes(h))) problems.push(`permiso sensible: ${p}`);
   if (app.allowBackup !== false) problems.push('allowBackup debería ser false');
   if (app.debuggable === true) problems.push('la app es debuggable (no es un build de release)');

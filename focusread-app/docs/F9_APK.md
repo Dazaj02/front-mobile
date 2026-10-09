@@ -37,7 +37,8 @@ Ajustes › Aplicaciones › FocusRead › Permisos — debe decir "ningún perm
 **Bloqueados** (`android.blockedPermissions`): almacenamiento y medios (READ/WRITE_EXTERNAL_STORAGE, READ_MEDIA_*; la app usa
 solo su carpeta privada), `RECORD_AUDIO` (expo-audio lo añade por defecto; la app solo reproduce), `MODIFY_AUDIO_SETTINGS`,
 `SYSTEM_ALERT_WINDOW`, `FOREGROUND_SERVICE*`, `DETECT_SCREEN_CAPTURE` (solo se *impide* capturar la pantalla de la key),
-`POST_NOTIFICATIONS`, `WAKE_LOCK`. Si algo del audio dejara de funcionar tras compilar, el candidato es `MODIFY_AUDIO_SETTINGS`.
+`POST_NOTIFICATIONS`, `WAKE_LOCK`, `USE_BIOMETRIC`/`USE_FINGERPRINT` (los añade expo-secure-store; la app no usa biometría).
+El permiso `<paquete>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` lo declara AndroidX para el propio paquete (nivel firma); el verificador lo acepta. Si algo del audio dejara de funcionar tras compilar, el candidato es `MODIFY_AUDIO_SETTINGS`.
 
 ## 4. Lo que ya está verificado en el bundle de producción (exportado con `expo export`)
 - El **catálogo de componentes (DEV) no está en el bundle de release** (se encontró dentro y se corrigió con un `require` bajo

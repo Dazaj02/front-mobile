@@ -37,6 +37,8 @@ describe('app.json', () => {
       'FOREGROUND_SERVICE',
       'DETECT_SCREEN_CAPTURE', // solo se usa usePreventScreenCapture, no la detección
       'POST_NOTIFICATIONS',
+      'USE_BIOMETRIC', // expo-secure-store lo añade por defecto; la app no pide biometría
+      'USE_FINGERPRINT',
     ]) {
       expect(blocked).toContain(`android.permission.${p}`);
     }
