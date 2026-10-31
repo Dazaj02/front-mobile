@@ -135,3 +135,4 @@
 - Emulador 360×800 (fuente 100/130/200 %), 411×914 (100/200 %) y tablet/plegable ≥ 800 dp, en vertical y horizontal.
 - Comprobar: sin textos cortados ni solapados, dock/tab bar fuera de la barra de gestos, lector ≤ 640 dp de ancho.
 - Capturas para el reporte (yo no puedo tomarlas).
+| D87 | Navegación | Deslizar entre Biblioteca, Progreso y Ajustes (pedido de David): `material-top-tabs` + `react-native-pager-view` con la barra inferior propia (`tabBarPosition=bottom`). **Cambia D35 y el criterio A11 del plan** ("sin swipe" y "solo la pestaña visible montada"): ahora una pestaña se monta al estar a una página de distancia y se queda montada (evita páginas en blanco al deslizar); `FocusedOnly` eliminado. Con "reducir movimiento" el cambio es inmediato. Requiere APK nuevo (módulo nativo). Sin háptico al deslizar (solo al tocar la barra). | Aceptada, pendiente de probar en el teléfono |

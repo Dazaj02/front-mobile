@@ -1,19 +1,19 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator, type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 
 import { AudioMiniDock } from '../design-system/organisms/AudioMiniDock';
 import { BottomTabBar, type TabItem } from '../design-system/organisms/BottomTabBar';
+import { useTheme } from '../design-system/theme/useTheme';
 import { haptic } from '../services/haptics';
 import { usePlayerStore } from '../state/playerStore';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { ProgressScreen } from '../features/progress/ProgressScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { es } from '../i18n/es';
-import { FocusedOnly } from './FocusedOnly';
 import type { TabParamList } from './types';
 
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createMaterialTopTabNavigator<TabParamList>();
 
 const TAB_ITEMS: readonly (TabItem & { key: keyof TabParamList })[] = [
   { key: 'Library', label: es.tabs.library, icon: 'library-outline', iconActive: 'library' },
@@ -22,7 +22,7 @@ const TAB_ITEMS: readonly (TabItem & { key: keyof TabParamList })[] = [
 ];
 
 // Adaptador: el organismo BottomTabBar es presentacional; aquí se conecta con React Navigation.
-export function NavTabBar({ state, navigation }: BottomTabBarProps) {
+export function NavTabBar({ state, navigation }: MaterialTopTabBarProps) {
   const activeName = state.routes[state.index].name;
   return (
     <BottomTabBar
@@ -39,24 +39,12 @@ export function NavTabBar({ state, navigation }: BottomTabBarProps) {
   );
 }
 
-const inFocus = (Screen: React.ComponentType) =>
-  function FocusedTab() {
-    return (
-      <FocusedOnly>
-        <Screen />
-      </FocusedOnly>
-    );
-  };
-
-const LibraryTab = inFocus(LibraryScreen);
-const ProgressTab = inFocus(ProgressScreen);
-const SettingsTab = inFocus(SettingsScreen);
-
 export function AppTabs() {
   const item = usePlayerStore((s) => s.item);
   const playing = usePlayerStore((s) => s.playing);
   const toggle = usePlayerStore((s) => s.toggle);
   const close = usePlayerStore((s) => s.close);
+  const { colors, reduceMotion } = useTheme();
 
   // Al salir de la app (cerrar sesión, eliminar cuenta) la lectura en voz alta se detiene.
   useEffect(() => () => usePlayerStore.getState().close(), []);
@@ -68,12 +56,21 @@ export function AppTabs() {
         // Atrás desde Progreso/Ajustes vuelve a Biblioteca; desde Biblioteca sale de la app.
         backBehavior="firstRoute"
         tabBar={(props) => <NavTabBar {...props} />}
-        // Sin swipe entre pestañas; las pestañas se montan al visitarlas y solo la visible queda montada.
-        screenOptions={{ headerShown: false, lazy: true }}
+        // Pager nativo: se desliza entre pestañas siguiendo el dedo (sin trabajo en el hilo de JS). La barra inferior
+        // propia sigue siendo el control accesible. Cada pestaña se monta al estar a una página de distancia (sin
+        // páginas en blanco al deslizar) y se queda montada; con "reducir movimiento" el cambio es inmediato.
+        tabBarPosition="bottom"
+        screenOptions={{
+          lazy: true,
+          lazyPreloadDistance: 1,
+          swipeEnabled: true,
+          animationEnabled: !reduceMotion,
+          sceneStyle: { backgroundColor: colors.bg.base },
+        }}
       >
-        <Tab.Screen name="Library" component={LibraryTab} />
-        <Tab.Screen name="Progress" component={ProgressTab} />
-        <Tab.Screen name="Settings" component={SettingsTab} />
+        <Tab.Screen name="Library" component={LibraryScreen} />
+        <Tab.Screen name="Progress" component={ProgressScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
       {/* Minireproductor: sobre la barra de pestañas, respetando el inset inferior. */}
       {item ? <AudioMiniDock title={item.title} playing={playing} onToggle={toggle} onClose={close} aboveTabBar /> : null}
