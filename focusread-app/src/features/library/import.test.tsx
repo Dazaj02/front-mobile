@@ -65,8 +65,20 @@ describe('Importar', () => {
     await fireEvent.changeText(screen.getByLabelText('Enlace del artículo'), 'https://ejemplo.com/nota');
     await fireEvent.press(submit());
     expect(await screen.findByText(es.errors.URL_FETCH_FAILED)).toBeTruthy();
-    expect(es.errors.URL_FETCH_FAILED).toContain('requiere conexión con el servidor');
+    expect(es.errors.URL_FETCH_FAILED).not.toContain('requiere conexión'); // el servidor sí respondió: el problema es la página
     expect(await mockC.articles.list()).toHaveLength(0);
+  });
+
+  it('avisa al pegar un enlace de video y, si el enlace falla, ofrece pegar el texto', async () => {
+    await renderImport();
+    await fireEvent.press(await screen.findByRole('button', { name: 'Enlace' }));
+    await fireEvent.changeText(screen.getByLabelText('Enlace del artículo'), 'https://www.tiktok.com/@a/video/1');
+    expect(screen.getByText(es.importSheet.videoLinkWarning)).toBeTruthy();
+    await fireEvent.press(submit());
+    expect(await screen.findByText(es.errors.URL_FETCH_FAILED)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: es.importSheet.pasteInstead }));
+    expect(await screen.findByLabelText('Texto a importar')).toBeTruthy();
+    expect(screen.queryByText(es.errors.URL_FETCH_FAILED)).toBeNull();
   });
 
   it('muestra el error traducido (por código) y permite reintentar', async () => {

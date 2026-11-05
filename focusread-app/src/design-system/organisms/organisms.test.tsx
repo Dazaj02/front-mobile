@@ -257,6 +257,18 @@ describe('DoseReader', () => {
   });
 });
 
+describe('DoseReader con listas', () => {
+  it('muestra cada elemento con su número o viñeta', async () => {
+    await renderWithTheme(<DoseReader content={'Pasos:\n\n1. Elige un texto\n2. Lee una dosis\n• Descansa'} position={0} total={2} progress={0} onNext={noop} />);
+    expect(screen.getByText('Pasos:')).toBeTruthy();
+    expect(screen.getByText('1.')).toBeTruthy();
+    expect(screen.getByText('Elige un texto')).toBeTruthy();
+    expect(screen.getByText('2.')).toBeTruthy();
+    expect(screen.getByText('•')).toBeTruthy();
+    expect(screen.getByText('Descansa')).toBeTruthy();
+  });
+});
+
 describe('EmptyState y ErrorState', () => {
   it('EmptyState ofrece acción', async () => {
     const onAction = jest.fn();

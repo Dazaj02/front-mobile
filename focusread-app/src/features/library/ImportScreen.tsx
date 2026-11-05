@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ImportSheet, type ImportDuration, type ImportMode, type ImportStatus } from '../../design-system/organisms/ImportSheet';
 import { SheetTemplate } from '../../design-system/templates/SheetTemplate';
 import { PRESET_CATEGORIES } from '../../domain/categories';
+import { isVideoPlatformLink } from '../../domain/links';
 import { useCategoryStore } from '../../state/categoryStore';
 import { getContainer } from '../../data/container';
 import type { ProcessArticleRequest } from '../../domain/contract';
@@ -95,6 +96,13 @@ export function ImportScreen({ navigation }: NativeStackScreenProps<AppStackPara
         completed={degraded}
         completedMessage={es.importSheet.created}
         warningMessage={degraded ? es.importSheet.degraded : undefined}
+        urlWarning={isVideoPlatformLink(url) ? es.importSheet.videoLinkWarning : undefined}
+        pasteInsteadLabel={es.importSheet.pasteInstead}
+        onPasteInstead={() => {
+          setMode('text');
+          setStatus('idle');
+          setError(undefined);
+        }}
         doneLabel={es.importSheet.done}
         onDone={close}
       />

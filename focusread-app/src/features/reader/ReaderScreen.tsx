@@ -17,6 +17,7 @@ import { useTheme } from '../../design-system/theme/useTheme';
 import { THEME_MODES } from '../../design-system/tokens';
 import { getContainer } from '../../data/container';
 import type { ArticleWithDoses } from '../../domain/contract';
+import { cleanForReading, toSpeech } from '../../domain/readableText';
 import { es } from '../../i18n/es';
 import { newId } from '../../lib/ids';
 import type { AppStackParamList } from '../../navigation/types';
@@ -74,6 +75,7 @@ function ReaderBody({ article, initialIndex, onExit }: { article: ArticleWithDos
   const [index, setIndex] = useState(Math.min(Math.max(0, initialIndex), last));
   const [quizOpen, setQuizOpen] = useState(false);
   const dose = article.doses[index];
+  const readable = cleanForReading(dose.content); // solo presentación y voz; lo guardado no cambia
   const time = useActiveTime(dose.id);
   const completed = useRef(new Set<string>());
 
@@ -135,7 +137,7 @@ function ReaderBody({ article, initialIndex, onExit }: { article: ArticleWithDos
   const listening = player.playing && player.item?.articleId === article.id && player.item.doseIndex === index;
   const toggleAudio = () => {
     if (listening) player.toggle();
-    else player.play({ articleId: article.id, title: article.title, doseIndex: index, text: dose.content });
+    else player.play({ articleId: article.id, title: article.title, doseIndex: index, text: toSpeech(readable) });
   };
   const nextTheme = THEME_MODES[(THEME_MODES.indexOf(theme) + 1) % THEME_MODES.length];
 
@@ -175,7 +177,7 @@ function ReaderBody({ article, initialIndex, onExit }: { article: ArticleWithDos
         ) : null}
         <DoseReader
           title={dose.title}
-          content={dose.content}
+          content={readable}
           position={index}
           total={article.doses.length}
           progress={Math.min(1, time.seconds / Math.max(1, dose.estMinutes * 60))}

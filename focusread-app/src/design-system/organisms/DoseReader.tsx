@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { AppText } from '../atoms/AppText';
 import { Button } from '../atoms/Button';
 import { ProgressBar } from '../atoms/ProgressBar';
+import { parseListLine } from '../../domain/readableText';
 import { useTheme } from '../theme/useTheme';
 
 export interface DoseReaderProps {
@@ -35,11 +36,43 @@ export function DoseReader({ title, content, position, total, progress, onPrev, 
         </AppText>
       ) : null}
       <View style={{ gap: spacing.lg }}>
-        {paragraphs.map((p, i) => (
-          <AppText key={i} variant="reading">
-            {p}
-          </AppText>
-        ))}
+        {paragraphs.map((p, i) => {
+          const lines = p.split(/\n/).map((l) => l.trim()).filter(Boolean);
+          if (!lines.some((l) => parseListLine(l))) {
+            return (
+              <AppText key={i} variant="reading">
+                {lines.join(' ')}
+              </AppText>
+            );
+          }
+          // Lista: cada elemento con su número o viñeta y sangría francesa.
+          return (
+            <View key={i} style={{ gap: spacing.sm }}>
+              {lines.map((line, j) => {
+                const item = parseListLine(line);
+                if (!item) {
+                  return (
+                    <AppText key={j} variant="reading">
+                      {line}
+                    </AppText>
+                  );
+                }
+                return (
+                  <View key={j} style={{ flexDirection: 'row', gap: spacing.sm }}>
+                    <View style={{ minWidth: spacing.xl }}>
+                      <AppText variant="reading" color="accent">
+                        {item.marker}
+                      </AppText>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="reading">{item.text}</AppText>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {onPrev && position > 0 ? (

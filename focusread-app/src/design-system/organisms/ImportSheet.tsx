@@ -31,6 +31,9 @@ export interface ImportSheetProps {
   status: ImportStatus;
   errorMessage?: string;
   warningMessage?: string; // AI_ENRICHMENT_DEGRADED
+  urlWarning?: string; // aviso bajo el campo de enlace (p. ej. enlace de video)
+  pasteInsteadLabel?: string; // tras fallar un enlace: pasar a pegar el texto
+  onPasteInstead?: () => void;
   disabledReason?: string; // p. ej. "Requiere conexión"
   minTextLength?: number;
   onSubmit: () => void;
@@ -60,6 +63,9 @@ export function ImportSheet({
   status,
   errorMessage,
   warningMessage,
+  urlWarning,
+  pasteInsteadLabel = 'Pegar el texto',
+  onPasteInstead,
   disabledReason,
   minTextLength = 300,
   onSubmit,
@@ -123,6 +129,10 @@ export function ImportSheet({
             errorText={status === 'error' ? errorMessage : undefined}
           />
         )}
+        {mode === 'url' && urlWarning && status !== 'error' ? <Banner tone="info" message={urlWarning} /> : null}
+        {mode === 'url' && status === 'error' && onPasteInstead ? (
+          <Button variant="secondary" label={pasteInsteadLabel} icon="create-outline" onPress={onPasteInstead} />
+        ) : null}
 
         <View style={{ gap: spacing.xs }}>
           <AppText variant="label" color="secondary">
